@@ -138,7 +138,7 @@
         <INDEX NAME="userid-postid" UNIQUE="false" FIELDS="userid, postid" PREVIOUS="userid-discussionid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="forumanon_track_prefs" COMMENT="Tracks each users untracked forums" PREVIOUS="forumanon_read">
+    <TABLE NAME="forumanon_track_prefs" COMMENT="Tracks each users untracked forums" PREVIOUS="forumanon_read" NEXT="forumanon_statement">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="userid"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id" NEXT="forumid"/>
