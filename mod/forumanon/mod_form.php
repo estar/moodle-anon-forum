@@ -56,17 +56,17 @@ class mod_forumanon_mod_form extends moodleform_mod {
         $this->add_intro_editor(true, get_string('forumintro', 'forumanon'));
 
         $options = array();
-        $options[FORUM_CHOOSESUBSCRIBE] = get_string('subscriptionoptional', 'forumanon');
-        $options[FORUM_FORCESUBSCRIBE] = get_string('subscriptionforced', 'forumanon');
-        $options[FORUM_INITIALSUBSCRIBE] = get_string('subscriptionauto', 'forumanon');
-        $options[FORUM_DISALLOWSUBSCRIBE] = get_string('subscriptiondisabled','forumanon');
+        $options[FORUMANON_CHOOSESUBSCRIBE] = get_string('subscriptionoptional', 'forumanon');
+        $options[FORUMANON_FORCESUBSCRIBE] = get_string('subscriptionforced', 'forumanon');
+        $options[FORUMANON_INITIALSUBSCRIBE] = get_string('subscriptionauto', 'forumanon');
+        $options[FORUMANON_DISALLOWSUBSCRIBE] = get_string('subscriptiondisabled','forumanon');
         $mform->addElement('select', 'forcesubscribe', get_string('subscriptionmode', 'forumanon'), $options);
         $mform->addHelpButton('forcesubscribe', 'subscriptionmode', 'forumanon');
 
         $options = array();
-        $options[FORUM_TRACKING_OPTIONAL] = get_string('trackingoptional', 'forumanon');
-        $options[FORUM_TRACKING_OFF] = get_string('trackingoff', 'forumanon');
-        $options[FORUM_TRACKING_ON] = get_string('trackingon', 'forumanon');
+        $options[FORUMANON_TRACKING_OPTIONAL] = get_string('trackingoptional', 'forumanon');
+        $options[FORUMANON_TRACKING_OFF] = get_string('trackingoff', 'forumanon');
+        $options[FORUMANON_TRACKING_ON] = get_string('trackingon', 'forumanon');
         $mform->addElement('select', 'trackingtype', get_string('trackingtype', 'forumanon'), $options);
         $mform->addHelpButton('trackingtype', 'trackingtype', 'forumanon');
 

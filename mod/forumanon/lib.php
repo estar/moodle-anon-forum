@@ -28,19 +28,19 @@ require_once($CFG->dirroot.'/user/selector/lib.php');
 
 /// CONSTANTS ///////////////////////////////////////////////////////////
 
-define('FORUM_MODE_FLATOLDEST', 1);
-define('FORUM_MODE_FLATNEWEST', -1);
-define('FORUM_MODE_THREADED', 2);
-define('FORUM_MODE_NESTED', 3);
+define('FORUMANON_MODE_FLATOLDEST', 1);
+define('FORUMANON_MODE_FLATNEWEST', -1);
+define('FORUMANON_MODE_THREADED', 2);
+define('FORUMANON_MODE_NESTED', 3);
 
-define('FORUM_CHOOSESUBSCRIBE', 0);
-define('FORUM_FORCESUBSCRIBE', 1);
-define('FORUM_INITIALSUBSCRIBE', 2);
-define('FORUM_DISALLOWSUBSCRIBE',3);
+define('FORUMANON_CHOOSESUBSCRIBE', 0);
+define('FORUMANON_FORCESUBSCRIBE', 1);
+define('FORUMANON_INITIALSUBSCRIBE', 2);
+define('FORUMANON_DISALLOWSUBSCRIBE',3);
 
-define('FORUM_TRACKING_OFF', 0);
-define('FORUM_TRACKING_OPTIONAL', 1);
-define('FORUM_TRACKING_ON', 2);
+define('FORUMANON_TRACKING_OFF', 0);
+define('FORUMANON_TRACKING_OPTIONAL', 1);
+define('FORUMANON_TRACKING_ON', 2);
 
 /// STANDARD FUNCTIONS ///////////////////////////////////////////////////////////
 
@@ -98,7 +98,7 @@ function forumanon_add_instance($forum, $mform) {
         }
     }
 
-    if ($forum->forcesubscribe == FORUM_INITIALSUBSCRIBE) {
+    if ($forum->forcesubscribe == FORUMANON_INITIALSUBSCRIBE) {
     /// all users should be subscribed initially
     /// Note: forumanon_get_potential_subscribers should take the forum context,
     /// but that does not exist yet, becuase the forum is only half build at this
@@ -2917,7 +2917,7 @@ function forumanon_get_course_forum($courseid, $type) {
         case "news":
             $forum->name  = get_string("namenews", "forumanon");
             $forum->intro = get_string("intronews", "forumanon");
-            $forum->forcesubscribe = FORUM_FORCESUBSCRIBE;
+            $forum->forcesubscribe = FORUMANON_FORCESUBSCRIBE;
             $forum->assessed = 0;
             if ($courseid == SITEID) {
                 $forum->name  = get_string("sitenews");
@@ -3095,7 +3095,7 @@ function forumanon_make_mail_post($course, $cm, $forum, $discussion, $post, $use
  *
  * @global object
  * @global object
- * @uses FORUM_MODE_THREADED
+ * @uses FORUMANON_MODE_THREADED
  * @uses PORTFOLIO_FORMAT_PLAINHTML
  * @uses PORTFOLIO_FORMAT_FILE
  * @uses PORTFOLIO_FORMAT_RICHHTML
@@ -3255,7 +3255,7 @@ function forumanon_print_post($post, $discussion, $forum, &$cm, $course, $ownpos
             $url->param('mark', 'read');
             $text = $str->markread;
         }
-        if ($str->displaymode == FORUM_MODE_THREADED) {
+        if ($str->displaymode == FORUMANON_MODE_THREADED) {
             $url->param('parent', $post->parent);
         } else {
             $url->set_anchor('p'.$post->id);
@@ -3266,7 +3266,7 @@ function forumanon_print_post($post, $discussion, $forum, &$cm, $course, $ownpos
     // Zoom in to the parent specifically
     if ($post->parent) {
         $url = new moodle_url($discussionlink);
-        if ($str->displaymode == FORUM_MODE_THREADED) {
+        if ($str->displaymode == FORUMANON_MODE_THREADED) {
             $url->param('parent', $post->parent);
         } else {
             $url->set_anchor('p'.$post->parent);
@@ -4423,9 +4423,9 @@ function forumanon_forcesubscribe($forumid, $value=1) {
 function forumanon_is_forcesubscribed($forum) {
     global $DB;
     if (isset($forum->forcesubscribe)) {    // then we use that
-        return ($forum->forcesubscribe == FORUM_FORCESUBSCRIBE);
+        return ($forum->forcesubscribe == FORUMANON_FORCESUBSCRIBE);
     } else {   // Check the database
-       return ($DB->get_field('forumanon', 'forcesubscribe', array('id' => $forum)) == FORUM_FORCESUBSCRIBE);
+       return ($DB->get_field('forumanon', 'forcesubscribe', array('id' => $forum)) == FORUMANON_FORCESUBSCRIBE);
     }
 }
 
@@ -4460,8 +4460,8 @@ function forumanon_get_subscribed_forums($course) {
     $sql = "SELECT f.id
               FROM {forumanon} f
                    LEFT JOIN {forumanon_subscriptions} fs ON (fs.forum = f.id AND fs.userid = ?)
-             WHERE f.forcesubscribe <> ".FORUM_DISALLOWSUBSCRIBE."
-                   AND (f.forcesubscribe = ".FORUM_FORCESUBSCRIBE." OR fs.id IS NOT NULL)";
+             WHERE f.forcesubscribe <> ".FORUMANON_DISALLOWSUBSCRIBE."
+                   AND (f.forcesubscribe = ".FORUMANON_FORCESUBSCRIBE." OR fs.id IS NOT NULL)";
     if ($subscribed = $DB->get_records_sql($sql, array($USER->id))) {
         foreach ($subscribed as $s) {
             $subscribed[$s->id] = $s->id;
@@ -4520,10 +4520,10 @@ function forumanon_post_subscription($post, $forum) {
     $action = '';
     $subscribed = forumanon_is_subscribed($USER->id, $forum);
 
-    if ($forum->forcesubscribe == FORUM_FORCESUBSCRIBE) { // database ignored
+    if ($forum->forcesubscribe == FORUMANON_FORCESUBSCRIBE) { // database ignored
         return "";
 
-    } elseif (($forum->forcesubscribe == FORUM_DISALLOWSUBSCRIBE)
+    } elseif (($forum->forcesubscribe == FORUMANON_DISALLOWSUBSCRIBE)
         && !has_capability('moodle/course:manageactivities', get_context_instance(CONTEXT_COURSE, $forum->course), $USER->id)) {
         if ($subscribed) {
             $action = 'unsubscribe'; // sanity check, following MDL-14558
@@ -4589,7 +4589,7 @@ function forumanon_get_subscribe_link($forum, $context, $messages = array(), $ca
 
     if (forumanon_is_forcesubscribed($forum)) {
         return $messages['forcesubscribed'];
-    } else if ($forum->forcesubscribe == FORUM_DISALLOWSUBSCRIBE && !has_capability('mod/forumanon:managesubscriptions', $context)) {
+    } else if ($forum->forcesubscribe == FORUMANON_DISALLOWSUBSCRIBE && !has_capability('mod/forumanon:managesubscriptions', $context)) {
         return $messages['cantsubscribe'];
     } else if ($cantaccessagroup) {
         return $messages['cantaccessgroup'];
@@ -5384,10 +5384,10 @@ function forumanon_print_latest_discussions($course, $forum, $maxdiscussions=-1,
  * Prints a forum discussion
  *
  * @uses CONTEXT_MODULE
- * @uses FORUM_MODE_FLATNEWEST
- * @uses FORUM_MODE_FLATOLDEST
- * @uses FORUM_MODE_THREADED
- * @uses FORUM_MODE_NESTED
+ * @uses FORUMANON_MODE_FLATNEWEST
+ * @uses FORUMANON_MODE_FLATOLDEST
+ * @uses FORUMANON_MODE_THREADED
+ * @uses FORUMANON_MODE_NESTED
  * @param stdClass $course
  * @param stdClass $cm
  * @param stdClass $forum
@@ -5419,7 +5419,7 @@ function forumanon_print_discussion($course, $cm, $forum, $discussion, $post, $m
     $posters = array();
 
     // preload all posts - TODO: improve...
-    if ($mode == FORUM_MODE_FLATNEWEST) {
+    if ($mode == FORUMANON_MODE_FLATNEWEST) {
         $sort = "p.created DESC";
     } else {
         $sort = "p.created ASC";
@@ -5478,17 +5478,17 @@ function forumanon_print_discussion($course, $cm, $forum, $discussion, $post, $m
                          '', '', $postread, true, $forumtracked);
 
     switch ($mode) {
-        case FORUM_MODE_FLATOLDEST :
-        case FORUM_MODE_FLATNEWEST :
+        case FORUMANON_MODE_FLATOLDEST :
+        case FORUMANON_MODE_FLATNEWEST :
         default:
             forumanon_print_posts_flat($course, $cm, $forum, $discussion, $post, $mode, $reply, $forumtracked, $posts);
             break;
 
-        case FORUM_MODE_THREADED :
+        case FORUMANON_MODE_THREADED :
             forumanon_print_posts_threaded($course, $cm, $forum, $discussion, $post, 0, $reply, $forumtracked, $posts);
             break;
 
-        case FORUM_MODE_NESTED :
+        case FORUMANON_MODE_NESTED :
             forumanon_print_posts_nested($course, $cm, $forum, $discussion, $post, $reply, $forumtracked, $posts);
             break;
     }
@@ -5498,7 +5498,7 @@ function forumanon_print_discussion($course, $cm, $forum, $discussion, $post, $m
 /**
  * @global object
  * @global object
- * @uses FORUM_MODE_FLATNEWEST
+ * @uses FORUMANON_MODE_FLATNEWEST
  * @param object $course
  * @param object $cm
  * @param object $forum
@@ -5515,7 +5515,7 @@ function forumanon_print_posts_flat($course, &$cm, $forum, $discussion, $post, $
 
     $link  = false;
 
-    if ($mode == FORUM_MODE_FLATNEWEST) {
+    if ($mode == FORUMANON_MODE_FLATNEWEST) {
         $sort = "ORDER BY created DESC";
     } else {
         $sort = "ORDER BY created ASC";
@@ -5874,7 +5874,7 @@ function forumanon_user_unenrolled($cp) {
  * @uses CONTEXT_SYSTEM
  * @uses CONTEXT_COURSE
  * @uses CONTEXT_COURSECAT
- * @uses FORUM_INITIALSUBSCRIBE
+ * @uses FORUMANON_INITIALSUBSCRIBE
  * @param int $userid
  * @param object $context
  * @return bool
@@ -5917,7 +5917,7 @@ function forumanon_add_user_default_subscriptions($userid, $context) {
                 if ($course = $DB->get_record('course', array('id' => $context->instanceid))) {
                      if ($forums = get_all_instances_in_course('forumanon', $course, $userid, false)) {
                          foreach ($forums as $forum) {
-                             if ($forum->forcesubscribe != FORUM_INITIALSUBSCRIBE) {
+                             if ($forum->forcesubscribe != FORUMANON_INITIALSUBSCRIBE) {
                                  continue;
                              }
                              if ($modcontext = get_context_instance(CONTEXT_MODULE, $forum->coursemodule)) {
@@ -5935,7 +5935,7 @@ function forumanon_add_user_default_subscriptions($userid, $context) {
             if (has_capability('mod/forumanon:initialsubscriptions', $context, $userid)) {
                  if ($cm = get_coursemodule_from_id('forumanon', $context->instanceid)) {
                      if ($forum = $DB->get_record('forumanon', array('id' => $cm->instance))) {
-                         if ($forum->forcesubscribe != FORUM_INITIALSUBSCRIBE) {
+                         if ($forum->forcesubscribe != FORUMANON_INITIALSUBSCRIBE) {
                              continue;
                          }
                          if (has_capability('mod/forumanon:viewdiscussion', $context, $userid)) {
@@ -6232,8 +6232,8 @@ function forumanon_tp_mark_posts_read($user, $postids) {
                        LEFT JOIN {forumanon_track_prefs} tf ON (tf.userid = ? AND tf.forumid = f.id)
                  WHERE p.id $usql
                        AND p.modified >= ?
-                       AND (f.trackingtype = ".FORUM_TRACKING_ON."
-                            OR (f.trackingtype = ".FORUM_TRACKING_OPTIONAL." AND tf.id IS NULL))";
+                       AND (f.trackingtype = ".FORUMANON_TRACKING_ON."
+                            OR (f.trackingtype = ".FORUMANON_TRACKING_OPTIONAL." AND tf.id IS NULL))";
         $status = $DB->execute($sql, $params) && $status;
     }
 
@@ -6577,8 +6577,8 @@ function forumanon_tp_get_course_unread_posts($userid, $courseid) {
                    LEFT JOIN {forumanon_track_prefs} tf ON (tf.userid = ? AND tf.forumid = f.id)
              WHERE f.course = ?
                    AND p.modified >= ? AND r.id is NULL
-                   AND (f.trackingtype = ".FORUM_TRACKING_ON."
-                        OR (f.trackingtype = ".FORUM_TRACKING_OPTIONAL." AND tf.id IS NULL))
+                   AND (f.trackingtype = ".FORUMANON_TRACKING_ON."
+                        OR (f.trackingtype = ".FORUMANON_TRACKING_OPTIONAL." AND tf.id IS NULL))
                    $timedsql
           GROUP BY f.id";
 
@@ -6732,8 +6732,8 @@ function forumanon_tp_get_untracked_forums($userid, $courseid) {
               FROM {forumanon} f
                    LEFT JOIN {forumanon_track_prefs} ft ON (ft.forumid = f.id AND ft.userid = ?)
              WHERE f.course = ?
-                   AND (f.trackingtype = ".FORUM_TRACKING_OFF."
-                        OR (f.trackingtype = ".FORUM_TRACKING_OPTIONAL." AND ft.id IS NOT NULL))";
+                   AND (f.trackingtype = ".FORUMANON_TRACKING_OFF."
+                        OR (f.trackingtype = ".FORUMANON_TRACKING_OPTIONAL." AND ft.id IS NOT NULL))";
 
     if ($forums = $DB->get_records_sql($sql, array($userid, $courseid))) {
         foreach ($forums as $forum) {
@@ -6787,8 +6787,8 @@ function forumanon_tp_can_track_forums($forum=false, $user=false) {
         $forum = $DB->get_record('forumanon', array('id' => $forum), '', 'id,trackingtype');
     }
 
-    $forumallows = ($forum->trackingtype == FORUM_TRACKING_OPTIONAL);
-    $forumforced = ($forum->trackingtype == FORUM_TRACKING_ON);
+    $forumallows = ($forum->trackingtype == FORUMANON_TRACKING_OPTIONAL);
+    $forumforced = ($forum->trackingtype == FORUMANON_TRACKING_ON);
 
     return ($forumforced || $forumallows)  && !empty($user->trackforums);
 }
@@ -6825,8 +6825,8 @@ function forumanon_tp_is_tracked($forum, $user=false) {
         return false;
     }
 
-    $forumallows = ($forum->trackingtype == FORUM_TRACKING_OPTIONAL);
-    $forumforced = ($forum->trackingtype == FORUM_TRACKING_ON);
+    $forumallows = ($forum->trackingtype == FORUMANON_TRACKING_OPTIONAL);
+    $forumforced = ($forum->trackingtype == FORUMANON_TRACKING_ON);
 
     return $forumforced ||
            ($forumallows && $DB->get_record('forumanon_track_prefs', array('userid' => $user->id, 'forumid' => $forum->id)) === false);
@@ -7489,10 +7489,10 @@ function forumanon_convert_to_roles($forum, $forummodid, $teacherroles=array(),
  * @return array
  */
 function forumanon_get_layout_modes() {
-    return array (FORUM_MODE_FLATOLDEST => get_string('modeflatoldestfirst', 'forumanon'),
-                  FORUM_MODE_FLATNEWEST => get_string('modeflatnewestfirst', 'forumanon'),
-                  FORUM_MODE_THREADED   => get_string('modethreaded', 'forumanon'),
-                  FORUM_MODE_NESTED     => get_string('modenested', 'forumanon'));
+    return array (FORUMANON_MODE_FLATOLDEST => get_string('modeflatoldestfirst', 'forumanon'),
+                  FORUMANON_MODE_FLATNEWEST => get_string('modeflatnewestfirst', 'forumanon'),
+                  FORUMANON_MODE_THREADED   => get_string('modethreaded', 'forumanon'),
+                  FORUMANON_MODE_NESTED     => get_string('modenested', 'forumanon'));
 }
 
 /**
@@ -7627,30 +7627,30 @@ function forumanon_extend_settings_navigation(settings_navigation $settingsnav, 
 
     $canmanage  = has_capability('mod/forumanon:managesubscriptions', $PAGE->cm->context);
     $subscriptionmode = forumanon_get_forcesubscribed($forumobject);
-    $cansubscribe = ($activeenrolled && $subscriptionmode != FORUM_FORCESUBSCRIBE && ($subscriptionmode != FORUM_DISALLOWSUBSCRIBE || $canmanage));
+    $cansubscribe = ($activeenrolled && $subscriptionmode != FORUMANON_FORCESUBSCRIBE && ($subscriptionmode != FORUMANON_DISALLOWSUBSCRIBE || $canmanage));
 
     if ($canmanage) {
         $mode = $forumnode->add(get_string('subscriptionmode', 'forumanon'), null, navigation_node::TYPE_CONTAINER);
 
-        $allowchoice = $mode->add(get_string('subscriptionoptional', 'forumanon'), new moodle_url('/mod/forumanon/subscribe.php', array('id'=>$forumobject->id, 'mode'=>FORUM_CHOOSESUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
-        $forceforever = $mode->add(get_string("subscriptionforced", "forumanon"), new moodle_url('/mod/forumanon/subscribe.php', array('id'=>$forumobject->id, 'mode'=>FORUM_FORCESUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
-        $forceinitially = $mode->add(get_string("subscriptionauto", "forumanon"), new moodle_url('/mod/forumanon/subscribe.php', array('id'=>$forumobject->id, 'mode'=>FORUM_INITIALSUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
-        $disallowchoice = $mode->add(get_string('subscriptiondisabled', 'forumanon'), new moodle_url('/mod/forumanon/subscribe.php', array('id'=>$forumobject->id, 'mode'=>FORUM_DISALLOWSUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
+        $allowchoice = $mode->add(get_string('subscriptionoptional', 'forumanon'), new moodle_url('/mod/forumanon/subscribe.php', array('id'=>$forumobject->id, 'mode'=>FORUMANON_CHOOSESUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
+        $forceforever = $mode->add(get_string("subscriptionforced", "forumanon"), new moodle_url('/mod/forumanon/subscribe.php', array('id'=>$forumobject->id, 'mode'=>FORUMANON_FORCESUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
+        $forceinitially = $mode->add(get_string("subscriptionauto", "forumanon"), new moodle_url('/mod/forumanon/subscribe.php', array('id'=>$forumobject->id, 'mode'=>FORUMANON_INITIALSUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
+        $disallowchoice = $mode->add(get_string('subscriptiondisabled', 'forumanon'), new moodle_url('/mod/forumanon/subscribe.php', array('id'=>$forumobject->id, 'mode'=>FORUMANON_DISALLOWSUBSCRIBE, 'sesskey'=>sesskey())), navigation_node::TYPE_SETTING);
 
         switch ($subscriptionmode) {
-            case FORUM_CHOOSESUBSCRIBE : // 0
+            case FORUMANON_CHOOSESUBSCRIBE : // 0
                 $allowchoice->action = null;
                 $allowchoice->add_class('activesetting');
                 break;
-            case FORUM_FORCESUBSCRIBE : // 1
+            case FORUMANON_FORCESUBSCRIBE : // 1
                 $forceforever->action = null;
                 $forceforever->add_class('activesetting');
                 break;
-            case FORUM_INITIALSUBSCRIBE : // 2
+            case FORUMANON_INITIALSUBSCRIBE : // 2
                 $forceinitially->action = null;
                 $forceinitially->add_class('activesetting');
                 break;
-            case FORUM_DISALLOWSUBSCRIBE : // 3
+            case FORUMANON_DISALLOWSUBSCRIBE : // 3
                 $disallowchoice->action = null;
                 $disallowchoice->add_class('activesetting');
                 break;
@@ -7659,16 +7659,16 @@ function forumanon_extend_settings_navigation(settings_navigation $settingsnav, 
     } else if ($activeenrolled) {
 
         switch ($subscriptionmode) {
-            case FORUM_CHOOSESUBSCRIBE : // 0
+            case FORUMANON_CHOOSESUBSCRIBE : // 0
                 $notenode = $forumnode->add(get_string('subscriptionoptional', 'forumanon'));
                 break;
-            case FORUM_FORCESUBSCRIBE : // 1
+            case FORUMANON_FORCESUBSCRIBE : // 1
                 $notenode = $forumnode->add(get_string('subscriptionforced', 'forumanon'));
                 break;
-            case FORUM_INITIALSUBSCRIBE : // 2
+            case FORUMANON_INITIALSUBSCRIBE : // 2
                 $notenode = $forumnode->add(get_string('subscriptionauto', 'forumanon'));
                 break;
-            case FORUM_DISALLOWSUBSCRIBE : // 3
+            case FORUMANON_DISALLOWSUBSCRIBE : // 3
                 $notenode = $forumnode->add(get_string('subscriptiondisabled', 'forumanon'));
                 break;
         }
@@ -7690,7 +7690,7 @@ function forumanon_extend_settings_navigation(settings_navigation $settingsnav, 
     }
 
     if ($enrolled && forumanon_tp_can_track_forums($forumobject)) { // keep tracking info for users with suspended enrolments
-        if ($forumobject->trackingtype != FORUM_TRACKING_OPTIONAL) {
+        if ($forumobject->trackingtype != FORUMANON_TRACKING_OPTIONAL) {
             //tracking forced on or off in forum settings so dont provide a link here to change it
             //could add unclickable text like for forced subscription but not sure this justifies adding another menu item
         } else {

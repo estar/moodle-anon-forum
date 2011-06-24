@@ -167,7 +167,7 @@ if (!is_null($subscribe) and !isguestuser()) {
         }
         if (!forumanon_is_forcesubscribed($forum)) {
             $subscribed = forumanon_is_subscribed($USER->id, $forum);
-            if ((has_capability('moodle/course:manageactivities', $coursecontext, $USER->id) || $forum->forcesubscribe != FORUM_DISALLOWSUBSCRIBE) && $subscribe && !$subscribed && $cansub) {
+            if ((has_capability('moodle/course:manageactivities', $coursecontext, $USER->id) || $forum->forcesubscribe != FORUMANON_DISALLOWSUBSCRIBE) && $subscribe && !$subscribed && $cansub) {
                 forumanon_subscribe($USER->id, $forumid);
             } else if (!$subscribe && $subscribed) {
                 forumanon_unsubscribe($USER->id, $forumid);
@@ -194,7 +194,7 @@ if ($generalforums) {
         $count = forumanon_count_discussions($forum, $cm, $course);
 
         if ($usetracking) {
-            if ($forum->trackingtype == FORUM_TRACKING_OFF) {
+            if ($forum->trackingtype == FORUMANON_TRACKING_OFF) {
                 $unreadlink  = '-';
                 $trackedlink = '-';
 
@@ -209,7 +209,7 @@ if ($generalforums) {
                     $unreadlink = '<span class="read">0</span>';
                 }
 
-                if ($forum->trackingtype == FORUM_TRACKING_ON) {
+                if ($forum->trackingtype == FORUMANON_TRACKING_ON) {
                     $trackedlink = $stryes;
 
                 } else {
@@ -241,7 +241,7 @@ if ($generalforums) {
         }
 
         if ($can_subscribe) {
-            if ($forum->forcesubscribe != FORUM_DISALLOWSUBSCRIBE) {
+            if ($forum->forcesubscribe != FORUMANON_DISALLOWSUBSCRIBE) {
                 $row[] = forumanon_get_subscribe_link($forum, $context, array('subscribed' => $stryes,
                         'unsubscribed' => $strno, 'forcesubscribed' => $stryes,
                         'cantsubscribe' => '-'), false, false, true, $subscribed_forums);
@@ -313,7 +313,7 @@ if ($course->id != SITEID) {    // Only real courses have learning forums
             $count = forumanon_count_discussions($forum, $cm, $course);
 
             if ($usetracking) {
-                if ($forum->trackingtype == FORUM_TRACKING_OFF) {
+                if ($forum->trackingtype == FORUMANON_TRACKING_OFF) {
                     $unreadlink  = '-';
                     $trackedlink = '-';
 
@@ -328,7 +328,7 @@ if ($course->id != SITEID) {    // Only real courses have learning forums
                         $unreadlink = '<span class="read">0</span>';
                     }
 
-                    if ($forum->trackingtype == FORUM_TRACKING_ON) {
+                    if ($forum->trackingtype == FORUMANON_TRACKING_ON) {
                         $trackedlink = $stryes;
 
                     } else {
@@ -371,7 +371,7 @@ if ($course->id != SITEID) {    // Only real courses have learning forums
             }
 
             if ($can_subscribe) {
-                if ($forum->forcesubscribe != FORUM_DISALLOWSUBSCRIBE) {
+                if ($forum->forcesubscribe != FORUMANON_DISALLOWSUBSCRIBE) {
                     $row[] = forumanon_get_subscribe_link($forum, $context, array('subscribed' => $stryes,
                         'unsubscribed' => $strno, 'forcesubscribed' => $stryes,
                         'cantsubscribe' => '-'), false, false, true, $subscribed_forums);

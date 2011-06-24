@@ -64,7 +64,7 @@ class mod_forumanon_post_form extends moodleform {
             $mform->setType('subscribe', PARAM_INT);
             $mform->addHelpButton('subscribemessage', 'subscription', 'forumanon');
 
-        } else if (isset($forum->forcesubscribe)&& $forum->forcesubscribe != FORUM_DISALLOWSUBSCRIBE ||
+        } else if (isset($forum->forcesubscribe)&& $forum->forcesubscribe != FORUMANON_DISALLOWSUBSCRIBE ||
                    has_capability('moodle/course:manageactivities', $coursecontext)) {
 
                 $options = array();
@@ -73,7 +73,7 @@ class mod_forumanon_post_form extends moodleform {
 
                 $mform->addElement('select', 'subscribe', get_string('subscription', 'forumanon'), $options);
                 $mform->addHelpButton('subscribe', 'subscription', 'forumanon');
-            } else if ($forum->forcesubscribe == FORUM_DISALLOWSUBSCRIBE) {
+            } else if ($forum->forcesubscribe == FORUMANON_DISALLOWSUBSCRIBE) {
                 $mform->addElement('static', 'subscribemessage', get_string('subscription', 'forumanon'), get_string('disallowsubscribe', 'forumanon'));
                 $mform->addElement('hidden', 'subscribe');
                 $mform->setType('subscribe', PARAM_INT);

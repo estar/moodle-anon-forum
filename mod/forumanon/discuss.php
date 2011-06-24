@@ -125,8 +125,8 @@
 
     if ($parent) {
         // If flat AND parent, then force nested display this time
-        if ($displaymode == FORUM_MODE_FLATOLDEST or $displaymode == FORUM_MODE_FLATNEWEST) {
-            $displaymode = FORUM_MODE_NESTED;
+        if ($displaymode == FORUMANON_MODE_FLATOLDEST or $displaymode == FORUMANON_MODE_FLATNEWEST) {
+            $displaymode = FORUMANON_MODE_NESTED;
         }
     } else {
         $parent = $discussion->firstpost;

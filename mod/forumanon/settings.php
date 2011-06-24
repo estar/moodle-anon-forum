@@ -27,7 +27,7 @@ if ($ADMIN->fulltree) {
     require_once($CFG->dirroot.'/mod/forumanon/lib.php');
 
     $settings->add(new admin_setting_configselect('forumanon_displaymode', get_string('displaymode', 'forumanon'),
-                       get_string('configdisplaymode', 'forumanon'), FORUM_MODE_NESTED, forumanon_get_layout_modes()));
+                       get_string('configdisplaymode', 'forumanon'), FORUMANON_MODE_NESTED, forumanon_get_layout_modes()));
 
     $settings->add(new admin_setting_configcheckbox('forumanon_replytouser', get_string('replytouser', 'forumanon'),
                        get_string('configreplytouser', 'forumanon'), 1));

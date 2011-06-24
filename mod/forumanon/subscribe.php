@@ -102,19 +102,19 @@ $returnto = optional_param('backtoindex',0,PARAM_INT)
 if (!is_null($mode) and has_capability('mod/forumanon:managesubscriptions', $context)) {
     require_sesskey();
     switch ($mode) {
-        case FORUM_CHOOSESUBSCRIBE : // 0
+        case FORUMANON_CHOOSESUBSCRIBE : // 0
             forumanon_forcesubscribe($forum->id, 0);
             redirect($returnto, get_string("everyonecannowchoose", "forumanon"), 1);
             break;
-        case FORUM_FORCESUBSCRIBE : // 1
+        case FORUMANON_FORCESUBSCRIBE : // 1
             forumanon_forcesubscribe($forum->id, 1);
             redirect($returnto, get_string("everyoneisnowsubscribed", "forumanon"), 1);
             break;
-        case FORUM_INITIALSUBSCRIBE : // 2
+        case FORUMANON_INITIALSUBSCRIBE : // 2
             forumanon_forcesubscribe($forum->id, 2);
             redirect($returnto, get_string("everyoneisnowsubscribed", "forumanon"), 1);
             break;
-        case FORUM_DISALLOWSUBSCRIBE : // 3
+        case FORUMANON_DISALLOWSUBSCRIBE : // 3
             forumanon_forcesubscribe($forum->id, 3);
             redirect($returnto, get_string("noonecansubscribenow", "forumanon"), 1);
             break;
@@ -149,7 +149,7 @@ if (forumanon_is_subscribed($user->id, $forum->id)) {
     }
 
 } else {  // subscribe
-    if ($forum->forcesubscribe == FORUM_DISALLOWSUBSCRIBE &&
+    if ($forum->forcesubscribe == FORUMANON_DISALLOWSUBSCRIBE &&
                 !has_capability('mod/forumanon:managesubscriptions', $context)) {
         print_error('disallowsubscribe', 'forumanon', $_SERVER["HTTP_REFERER"]);
     }
