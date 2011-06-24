@@ -41,7 +41,7 @@ require_once("$CFG->dirroot/$CFG->admin/generator.php");
  * This might be left until Moodle 2.1 when the test case framework
  * is due to change.
  */
-Mock::generate('forum_portfolio_caller', 'mock_caller');
+Mock::generate('forumanon_portfolio_caller', 'mock_caller');
 Mock::generate('portfolio_exporter', 'mock_exporter');
 
 class testForumPortfolioCallers extends portfoliolib_test {
@@ -85,10 +85,10 @@ class testForumPortfolioCallers extends portfoliolib_test {
         $first_post = reset($posts);
 
         $callbackargs = array('postid' => $first_post->id, 'discussionid' => $first_discussion->id);
-        $this->postcaller = parent::setup_caller('forum_portfolio_caller', $callbackargs, $first_post->userid);
+        $this->postcaller = parent::setup_caller('forumanon_portfolio_caller', $callbackargs, $first_post->userid);
 
         unset($callbackargs['postid']);
-        $this->discussioncaller = parent::setup_caller('forum_portfolio_caller', $callbackargs, $first_post->userid);
+        $this->discussioncaller = parent::setup_caller('forumanon_portfolio_caller', $callbackargs, $first_post->userid);
 
     }
 

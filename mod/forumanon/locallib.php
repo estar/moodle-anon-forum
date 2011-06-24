@@ -27,7 +27,7 @@ require_once($CFG->libdir . '/portfolio/caller.php');
  * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class forum_portfolio_caller extends portfolio_module_caller_base {
+class forumanon_portfolio_caller extends portfolio_module_caller_base {
 
     protected $postid;
     protected $discussionid;

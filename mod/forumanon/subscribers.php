@@ -59,8 +59,8 @@ add_to_log($course->id, "forumanon", "view subscribers", "subscribers.php?id=$fo
 $forumoutput = $PAGE->get_renderer('mod_forumanon');
 $currentgroup = groups_get_activity_group($cm);
 $options = array('forumid'=>$forum->id, 'currentgroup'=>$currentgroup, 'context'=>$context);
-$existingselector = new forum_existing_subscriber_selector('existingsubscribers', $options);
-$subscriberselector = new forum_potential_subscriber_selector('potentialsubscribers', $options);
+$existingselector = new forumanon_existing_subscriber_selector('existingsubscribers', $options);
+$subscriberselector = new forumanon_potential_subscriber_selector('potentialsubscribers', $options);
 $subscriberselector->set_existing_subscribers($existingselector->find_users(''));
 
 if (data_submitted()) {

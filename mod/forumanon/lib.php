@@ -3299,7 +3299,7 @@ function forumanon_print_post($post, $discussion, $forum, &$cm, $course, $ownpos
         $p = array('postid' => $post->id);
         require_once($CFG->libdir.'/portfoliolib.php');
         $button = new portfolio_add_button();
-        $button->set_callback_options('forum_portfolio_caller', array('postid' => $post->id), '/mod/forumanon/locallib.php');
+        $button->set_callback_options('forumanon_portfolio_caller', array('postid' => $post->id), '/mod/forumanon/locallib.php');
         if (empty($attachments)) {
             $button->set_formats(PORTFOLIO_FORMAT_PLAINHTML);
         } else {
@@ -3945,7 +3945,7 @@ function forumanon_print_attachments($post, $cm, $type) {
                 $output .= "<a href=\"$path\">$iconimage</a> ";
                 $output .= "<a href=\"$path\">".s($filename)."</a>";
                 if ($canexport) {
-                    $button->set_callback_options('forum_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), '/mod/forumanon/locallib.php');
+                    $button->set_callback_options('forumanon_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), '/mod/forumanon/locallib.php');
                     $button->set_format_by_file($file);
                     $output .= $button->to_html(PORTFOLIO_ADD_ICON_LINK);
                 }
@@ -3959,7 +3959,7 @@ function forumanon_print_attachments($post, $cm, $type) {
                     // Image attachments don't get printed as links
                     $imagereturn .= "<br /><img src=\"$path\" alt=\"\" />";
                     if ($canexport) {
-                        $button->set_callback_options('forum_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), '/mod/forumanon/locallib.php');
+                        $button->set_callback_options('forumanon_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), '/mod/forumanon/locallib.php');
                         $button->set_format_by_file($file);
                         $imagereturn .= $button->to_html(PORTFOLIO_ADD_ICON_LINK);
                     }
@@ -3967,7 +3967,7 @@ function forumanon_print_attachments($post, $cm, $type) {
                     $output .= "<a href=\"$path\">$iconimage</a> ";
                     $output .= format_text("<a href=\"$path\">".s($filename)."</a>", FORMAT_HTML, array('context'=>$context));
                     if ($canexport) {
-                        $button->set_callback_options('forum_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), '/mod/forumanon/locallib.php');
+                        $button->set_callback_options('forumanon_portfolio_caller', array('postid' => $post->id, 'attachment' => $file->get_id()), '/mod/forumanon/locallib.php');
                         $button->set_format_by_file($file);
                         $output .= $button->to_html(PORTFOLIO_ADD_ICON_LINK);
                     }
@@ -7790,7 +7790,7 @@ abstract class forumanon_subscriber_selector_base extends user_selector_base {
  * @copyright 2009 Sam Hemelryk
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class forum_potential_subscriber_selector extends forumanon_subscriber_selector_base {
+class forumanon_potential_subscriber_selector extends forumanon_subscriber_selector_base {
 
     /**
      * If set to true EVERYONE in this course is force subscribed to this forum
@@ -7892,7 +7892,7 @@ class forum_potential_subscriber_selector extends forumanon_subscriber_selector_
  * @copyright 2009 Sam Hemelryk
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class forum_existing_subscriber_selector extends forumanon_subscriber_selector_base {
+class forumanon_existing_subscriber_selector extends forumanon_subscriber_selector_base {
 
     /**
      * Finds all subscribed users

@@ -193,7 +193,7 @@
     if (has_capability('mod/forumanon:exportdiscussion', $modcontext) && (!empty($CFG->enableportfolios))) {
         require_once($CFG->libdir.'/portfoliolib.php');
         $button = new portfolio_add_button();
-        $button->set_callback_options('forum_portfolio_caller', array('discussionid' => $discussion->id), '/mod/forumanon/locallib.php');
+        $button->set_callback_options('forumanon_portfolio_caller', array('discussionid' => $discussion->id), '/mod/forumanon/locallib.php');
         $button = $button->to_html(PORTFOLIO_ADD_FULL_FORM, get_string('exportdiscussion', 'mod_forumanon'));
         $buttonextraclass = '';
         if (empty($button)) {
