@@ -2816,10 +2816,29 @@ function convert_tabrows_to_tree($tabrows, $selected, $inactive, $activated) {
  */
 function get_docs_url($path) {
     global $CFG;
-    if (!empty($CFG->docroot)) {
-        return $CFG->docroot . '/' . current_language() . '/' . $path;
+    // Check that $CFG->release has been set up, during installation it won't be.
+    if (empty($CFG->release)) {
+        // It's not there yet so look at version.php
+        include($CFG->dirroot.'/version.php');
     } else {
-        return 'http://docs.moodle.org/en/'.$path;
+        // We can use $CFG->release and avoid having to include version.php
+        $release = $CFG->release;
+    }
+    // Attempt to match the branch from the release
+    if (preg_match('/^(.)\.(.)/', $release, $matches)) {
+        // We should ALWAYS get here
+        $branch = $matches[1].$matches[2];
+    } else {
+        // We should never get here but in case we do lets set $branch to .
+        // the smart one's will know that this is the current directory
+        // and the smarter ones will know that there is some smart matching
+        // that will ensure people end up at the latest version of the docs.
+        $branch = '.';
+    }
+    if (!empty($CFG->docroot)) {
+        return $CFG->docroot . '/' . $branch . '/' . current_language() . '/' . $path;
+    } else {
+        return 'http://docs.moodle.org/'. $branch . '/en/' . $path;
     }
 }
 
@@ -3041,8 +3060,9 @@ EOT;
      * @return void Echo's output
      */
     private function _update($percent, $msg) {
-        if (empty($this->time_start)){
-            $this->time_start = microtime(true);
+        if (empty($this->time_start)) {
+            throw new coding_exception('You must call create() (or use the $autostart ' .
+                    'argument to the constructor) before you try updating the progress bar.');
         }
 
         if (CLI_SCRIPT) {

@@ -1291,7 +1291,7 @@ function data_print_template($template, $records, $data, $search='', $page=0, $r
 
         $patterns[]='##export##';
 
-        if ($CFG->enableportfolios && ($template == 'singletemplate' || $template == 'listtemplate')
+        if (!empty($CFG->enableportfolios) && ($template == 'singletemplate' || $template == 'listtemplate')
             && ((has_capability('mod/data:exportentry', $context)
                 || (data_isowner($record->id) && has_capability('mod/data:exportownentry', $context))))) {
             require_once($CFG->libdir . '/portfoliolib.php');
@@ -3336,4 +3336,15 @@ function data_comment_validate($comment_param) {
         }
     }
     return true;
+}
+
+/**
+ * Return a list of page types
+ * @param string $pagetype current page type
+ * @param stdClass $parentcontext Block's parent context
+ * @param stdClass $currentcontext Current context of block
+ */
+function data_pagetypelist($pagetype, $parentcontext, $currentcontext) {
+    $module_pagetype = array('mod-data-*'=>get_string('page-mod-data-x', 'data'));
+    return $module_pagetype;
 }

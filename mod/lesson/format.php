@@ -29,6 +29,27 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+/**#@+
+ * The core question types.
+ *
+ * These used to be in lib/questionlib.php, but are being deprecated. Copying them
+ * here to keep this code working for now.
+ */
+if (!defined('SHORTANSWER')) {
+    define("SHORTANSWER",   "shortanswer");
+    define("TRUEFALSE",     "truefalse");
+    define("MULTICHOICE",   "multichoice");
+    define("RANDOM",        "random");
+    define("MATCH",         "match");
+    define("RANDOMSAMATCH", "randomsamatch");
+    define("DESCRIPTION",   "description");
+    define("NUMERICAL",     "numerical");
+    define("MULTIANSWER",   "multianswer");
+    define("CALCULATED",    "calculated");
+    define("ESSAY",         "essay");
+}
+/**#@-*/
+
 /**
  * Given some question info and some data about the the answers
  * this function parses, organises and saves the question
@@ -432,7 +453,7 @@ class qformat_default {
         return false;
     }
 
-    function readquestions($lines) {
+    protected function readquestions($lines) {
     /// Parses an array of lines into an array of questions,
     /// where each item is a question object as defined by
     /// readquestion().   Questions are defined as anything

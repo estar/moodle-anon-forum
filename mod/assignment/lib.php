@@ -971,8 +971,7 @@ class assignment_base {
             $userfields = user_picture::fields('u', array('lastaccess'));
             $select = "SELECT $userfields,
                               s.id AS submissionid, s.grade, s.submissioncomment,
-                              s.timemodified, s.timemarked,
-                              COALESCE(SIGN(SIGN(s.timemarked) + SIGN(s.timemarked - s.timemodified)), 0) AS status ";
+                              s.timemodified, s.timemarked ";
             $sql = 'FROM {user} u '.
                    'LEFT JOIN {assignment_submissions} s ON u.id = s.userid
                    AND s.assignment = '.$this->assignment->id.' '.
@@ -1142,20 +1141,6 @@ class assignment_base {
         //hook to allow plagiarism plugins to update status/print links.
         plagiarism_update_status($this->course, $this->cm);
 
-        /// Print quickgrade form around the table
-        if ($quickgrade) {
-            $formattrs = array();
-            $formattrs['action'] = new moodle_url('/mod/assignment/submissions.php');
-            $formattrs['id'] = 'fastg';
-            $formattrs['method'] = 'post';
-
-            echo html_writer::start_tag('form', $formattrs);
-            echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'id',      'value'=> $this->cm->id));
-            echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'mode',    'value'=> 'fastgrade'));
-            echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'page',    'value'=> $page));
-            echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'sesskey', 'value'=> sesskey()));
-        }
-
         $course_context = get_context_instance(CONTEXT_COURSE, $course->id);
         if (has_capability('gradereport/grader:view', $course_context) && has_capability('moodle/grade:viewall', $course_context)) {
             echo '<div class="allcoursegrades"><a href="' . $CFG->wwwroot . '/grade/report/grader/index.php?id=' . $course->id . '">'
@@ -1174,6 +1159,20 @@ class assignment_base {
         $groupmode = groups_get_activity_groupmode($cm);
         $currentgroup = groups_get_activity_group($cm, true);
         groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/assignment/submissions.php?id=' . $this->cm->id);
+
+        /// Print quickgrade form around the table
+        if ($quickgrade) {
+            $formattrs = array();
+            $formattrs['action'] = new moodle_url('/mod/assignment/submissions.php');
+            $formattrs['id'] = 'fastg';
+            $formattrs['method'] = 'post';
+
+            echo html_writer::start_tag('form', $formattrs);
+            echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'id',      'value'=> $this->cm->id));
+            echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'mode',    'value'=> 'fastgrade'));
+            echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'page',    'value'=> $page));
+            echo html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'sesskey', 'value'=> sesskey()));
+        }
 
         /// Get all ppl that are allowed to submit assignments
         list($esql, $params) = get_enrolled_sql($context, 'mod/assignment:view', $currentgroup);
@@ -1285,8 +1284,7 @@ class assignment_base {
         if (!empty($users)) {
             $select = "SELECT $ufields,
                               s.id AS submissionid, s.grade, s.submissioncomment,
-                              s.timemodified, s.timemarked,
-                              COALESCE(SIGN(SIGN(s.timemarked) + SIGN(s.timemarked - s.timemodified)), 0) AS status ";
+                              s.timemodified, s.timemarked ";
             $sql = 'FROM {user} u '.
                    'LEFT JOIN {assignment_submissions} s ON u.id = s.userid
                     AND s.assignment = '.$this->assignment->id.' '.
@@ -1868,23 +1866,25 @@ class assignment_base {
 
         $output = '';
 
-        $fs = get_file_storage();
-
-        $found = false;
-
         $submission = $this->get_submission($userid);
+        if (!$submission) {
+            return $output;
+        }
 
-        if (($submission) && $files = $fs->get_area_files($this->context->id, 'mod_assignment', 'submission', $submission->id, "timemodified", false)) {
-            require_once($CFG->libdir.'/portfoliolib.php');
+        $fs = get_file_storage();
+        $files = $fs->get_area_files($this->context->id, 'mod_assignment', 'submission', $submission->id, "timemodified", false);
+        if (!empty($files)) {
             require_once($CFG->dirroot . '/mod/assignment/locallib.php');
-            $button = new portfolio_add_button();
+            if ($CFG->enableportfolios) {
+                require_once($CFG->libdir.'/portfoliolib.php');
+                $button = new portfolio_add_button();
+            }
             foreach ($files as $file) {
                 $filename = $file->get_filename();
-                $found = true;
                 $mimetype = $file->get_mimetype();
                 $path = file_encode_url($CFG->wwwroot.'/pluginfile.php', '/'.$this->context->id.'/mod_assignment/submission/'.$submission->id.'/'.$filename);
                 $output .= '<a href="'.$path.'" ><img src="'.$OUTPUT->pix_url(file_mimetype_icon($mimetype)).'" class="icon" alt="'.$mimetype.'" />'.s($filename).'</a>';
-                if ($this->portfolio_exportable() && has_capability('mod/assignment:exportownsubmission', $this->context)) {
+                if ($CFG->enableportfolios && $this->portfolio_exportable() && has_capability('mod/assignment:exportownsubmission', $this->context)) {
                     $button->set_callback_options('assignment_portfolio_caller', array('id' => $this->cm->id, 'fileid' => $file->get_id()), '/mod/assignment/locallib.php');
                     $button->set_format_by_file($file);
                     $output .= $button->to_html(PORTFOLIO_ADD_ICON_LINK);
@@ -1892,7 +1892,7 @@ class assignment_base {
                 $output .= plagiarism_get_links(array('userid'=>$userid, 'file'=>$file, 'cmid'=>$this->cm->id, 'course'=>$this->course, 'assignment'=>$this->assignment));
                 $output .= '<br />';
             }
-            if (count($files) > 1  && $this->portfolio_exportable() && has_capability('mod/assignment:exportownsubmission', $this->context)) {
+            if ($CFG->enableportfolios && count($files) > 1  && $this->portfolio_exportable() && has_capability('mod/assignment:exportownsubmission', $this->context)) {
                 $button->set_callback_options('assignment_portfolio_caller', array('id' => $this->cm->id), '/mod/assignment/locallib.php');
                 $output .= '<br />'  . $button->to_html();
             }
@@ -3716,3 +3716,17 @@ function assignment_get_file_areas($course, $cm, $context) {
     return $areas;
 }
 
+/**
+ * Return a list of page types
+ * @param string $pagetype current page type
+ * @param stdClass $parentcontext Block's parent context
+ * @param stdClass $currentcontext Current context of block
+ */
+function assignment_pagetypelist($pagetype, $parentcontext, $currentcontext) {
+    $module_pagetype = array(
+        'mod-assignment-*'=>get_string('page-mod-assignment-x', 'assignment'),
+        'mod-assignment-view'=>get_string('page-mod-assignment-view', 'assignment'),
+        'mod-assignment-submissions'=>get_string('page-mod-assignment-submissions', 'assignment')
+    );
+    return $module_pagetype;
+}

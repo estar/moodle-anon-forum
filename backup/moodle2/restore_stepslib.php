@@ -2025,6 +2025,8 @@ class restore_module_structure_step extends restore_structure_step {
         $data = (object)$data;
         $oldid = $data->id;
 
+        $this->task->set_old_moduleversion($data->version);
+
         $data->course = $this->task->get_courseid();
         $data->module = $DB->get_field('modules', 'id', array('name' => $data->modulename));
         // Map section (first try by course_section mapping match. Useful in course and section restores)
@@ -2310,6 +2312,17 @@ class restore_create_categories_and_questions extends restore_structure_step {
         // we have loaded qcatids there for all parsed questions
         $data->category = $this->get_mappingid('question_category', $questionmapping->parentitemid);
 
+        // In the past, there were some very sloppy values of penalty. Fix them.
+        if ($data->penalty >= 0.33 && $data->penalty <= 0.34) {
+            $data->penalty = 0.3333333;
+        }
+        if ($data->penalty >= 0.66 && $data->penalty <= 0.67) {
+            $data->penalty = 0.6666667;
+        }
+        if ($data->penalty >= 1) {
+            $data->penalty = 1;
+        }
+
         $data->timecreated  = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
 
@@ -2337,6 +2350,47 @@ class restore_create_categories_and_questions extends restore_structure_step {
         // haven't their contexts to be restored to
         // The {@link restore_create_question_files}, executed in the final step
         // step will be in charge of restoring all the question files
+    }
+
+        protected function process_question_hint($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $oldid = $data->id;
+
+        // Detect if the question is created or mapped
+        $oldquestionid   = $this->get_old_parentid('question');
+        $newquestionid   = $this->get_new_parentid('question');
+        $questioncreated = $this->get_mappingid('question_created', $oldquestionid) ? true : false;
+
+        // If the question has been created by restore, we need to create its question_answers too
+        if ($questioncreated) {
+            // Adjust some columns
+            $data->questionid = $newquestionid;
+            // Insert record
+            $newitemid = $DB->insert_record('question_answers', $data);
+
+        // The question existed, we need to map the existing question_answers
+        } else {
+            // Look in question_answers by answertext matching
+            $sql = 'SELECT id
+                      FROM {question_hints}
+                     WHERE questionid = ?
+                       AND ' . $DB->sql_compare_text('hint', 255) . ' = ' . $DB->sql_compare_text('?', 255);
+            $params = array($newquestionid, $data->hint);
+            $newitemid = $DB->get_field_sql($sql, $params);
+            // If we haven't found the newitemid, something has gone really wrong, question in DB
+            // is missing answers, exception
+            if (!$newitemid) {
+                $info = new stdClass();
+                $info->filequestionid = $oldquestionid;
+                $info->dbquestionid   = $newquestionid;
+                $info->hint           = $data->hint;
+                throw new restore_step_exception('error_question_hint_missing_in_db', $info);
+            }
+        }
+        // Create mapping (we'll use this intensively when restoring question_states. And also answerfeedback files)
+        $this->set_mapping('question_hint', $oldid, $newitemid);
     }
 
     protected function after_execute() {
@@ -2459,8 +2513,12 @@ class restore_create_question_files extends restore_execution_step {
                                               $oldctxid, $this->task->get_userid(), 'question_created', $question->itemid, $newctxid, true);
             restore_dbops::send_files_to_pool($this->get_basepath(), $this->get_restoreid(), 'question', 'generalfeedback',
                                               $oldctxid, $this->task->get_userid(), 'question_created', $question->itemid, $newctxid, true);
+            restore_dbops::send_files_to_pool($this->get_basepath(), $this->get_restoreid(), 'question', 'answer',
+                                              $oldctxid, $this->task->get_userid(), 'question_answer', null, $newctxid, true);
             restore_dbops::send_files_to_pool($this->get_basepath(), $this->get_restoreid(), 'question', 'answerfeedback',
                                               $oldctxid, $this->task->get_userid(), 'question_answer', null, $newctxid, true);
+            restore_dbops::send_files_to_pool($this->get_basepath(), $this->get_restoreid(), 'question', 'hint',
+                                              $oldctxid, $this->task->get_userid(), 'question_hint', null, $newctxid, true);
             // Add qtype dependent files
             $components = backup_qtype_plugin::get_components_and_fileareas($question->qtype);
             foreach ($components as $component => $fileareas) {
@@ -2481,12 +2539,16 @@ class restore_create_question_files extends restore_execution_step {
  * (like the quiz module), to support qtype plugins, states and sessions
  */
 abstract class restore_questions_activity_structure_step extends restore_activity_structure_step {
+    /** @var array question_attempt->id to qtype. */
+    protected $qtypes = array();
+    /** @var array question_attempt->id to questionid. */
+    protected $newquestionids = array();
 
     /**
      * Attach below $element (usually attempts) the needed restore_path_elements
-     * to restore question_states
+     * to restore question_usages and all they contain.
      */
-    protected function add_question_attempts_states($element, &$paths) {
+    protected function add_question_usages($element, &$paths) {
         // Check $element is restore_path_element
         if (! $element instanceof restore_path_element) {
             throw new restore_step_exception('element_must_be_restore_path_element', $element);
@@ -2495,70 +2557,124 @@ abstract class restore_questions_activity_structure_step extends restore_activit
         if (!is_array($paths)) {
             throw new restore_step_exception('paths_must_be_array', $paths);
         }
-        $paths[] = new restore_path_element('question_state', $element->get_path() . '/states/state');
+        $paths[] = new restore_path_element('question_usage',
+                $element->get_path() . '/question_usage');
+        $paths[] = new restore_path_element('question_attempt',
+                $element->get_path() . '/question_usage/question_attempts/question_attempt');
+        $paths[] = new restore_path_element('question_attempt_step',
+                $element->get_path() . '/question_usage/question_attempts/question_attempt/steps/step',
+                true);
+        $paths[] = new restore_path_element('question_attempt_step_data',
+                $element->get_path() . '/question_usage/question_attempts/question_attempt/steps/step/response/variable');
     }
 
     /**
-     * Attach below $element (usually attempts) the needed restore_path_elements
-     * to restore question_sessions
+     * Process question_usages
      */
-    protected function add_question_attempts_sessions($element, &$paths) {
-        // Check $element is restore_path_element
-        if (! $element instanceof restore_path_element) {
-            throw new restore_step_exception('element_must_be_restore_path_element', $element);
-        }
-        // Check $paths is one array
-        if (!is_array($paths)) {
-            throw new restore_step_exception('paths_must_be_array', $paths);
-        }
-        $paths[] = new restore_path_element('question_session', $element->get_path() . '/sessions/session');
-    }
-
-    /**
-     * Process question_states
-     */
-    protected function process_question_state($data) {
+    protected function process_question_usage($data) {
         global $DB;
+
+        // Clear our caches.
+        $this->qtypes = array();
+        $this->newquestionids = array();
 
         $data = (object)$data;
         $oldid = $data->id;
 
-        // Get complete question mapping, we'll need info
-        $question = $this->get_mapping('question', $data->question);
-
-        // In the quiz_attempt mapping we are storing uniqueid
-        // and not id, so this gets the correct question_attempt to point to
-        $data->attempt  = $this->get_new_parentid('quiz_attempt');
-        $data->question = $question->newitemid;
-        $data->answer   = $this->restore_recode_answer($data, $question->info->qtype); // Delegate recoding of answer
-        $data->timestamp= $this->apply_date_offset($data->timestamp);
-
-        // Everything ready, insert and create mapping (needed by question_sessions)
-        $newitemid = $DB->insert_record('question_states', $data);
-        $this->set_mapping('question_state', $oldid, $newitemid);
-    }
-
-    /**
-     * Process question_sessions
-     */
-    protected function process_question_session($data) {
-        global $DB;
-
-        $data = (object)$data;
-        $oldid = $data->id;
-
-        // In the quiz_attempt mapping we are storing uniqueid
-        // and not id, so this gets the correct question_attempt to point to
-        $data->attemptid  = $this->get_new_parentid('quiz_attempt');
-        $data->questionid = $this->get_mappingid('question', $data->questionid);
-        $data->newest     = $this->get_mappingid('question_state', $data->newest);
-        $data->newgraded  = $this->get_mappingid('question_state', $data->newgraded);
+        $oldcontextid = $this->get_task()->get_old_contextid();
+        $data->contextid  = $this->get_mappingid('context', $this->task->get_old_contextid());
 
         // Everything ready, insert (no mapping needed)
-        $newitemid = $DB->insert_record('question_sessions', $data);
+        $newitemid = $DB->insert_record('question_usages', $data);
 
-        // Note: question_sessions haven't files associated. On purpose manualcomment is lacking
-        // support for them, so we don't need to handle them here.
+        $this->inform_new_usage_id($newitemid);
+
+        $this->set_mapping('question_usage', $oldid, $newitemid, false);
+    }
+
+    /**
+     * When process_question_usage creates the new usage, it calls this method
+     * to let the activity link to the new usage. For example, the quiz uses
+     * this method to set quiz_attempts.uniqueid to the new usage id.
+     * @param integer $newusageid
+     */
+    abstract protected function inform_new_usage_id($newusageid);
+
+    /**
+     * Process question_attempts
+     */
+    protected function process_question_attempt($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $oldid = $data->id;
+        $question = $this->get_mapping('question', $data->questionid);
+
+        $data->questionusageid = $this->get_new_parentid('question_usage');
+        $data->questionid      = $question->newitemid;
+        $data->timemodified    = $this->apply_date_offset($data->timemodified);
+
+        $newitemid = $DB->insert_record('question_attempts', $data);
+
+        $this->set_mapping('question_attempt', $oldid, $newitemid);
+        $this->qtypes[$newitemid] = $question->info->qtype;
+        $this->newquestionids[$newitemid] = $data->questionid;
+    }
+
+    /**
+     * Process question_attempt_steps
+     */
+    protected function process_question_attempt_step($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $oldid = $data->id;
+
+        // Pull out the response data.
+        $response = array();
+        if (!empty($data->response['variable'])) {
+            foreach ($data->response['variable'] as $variable) {
+                $response[$variable['name']] = $variable['value'];
+            }
+        }
+        unset($data->response);
+
+        $data->questionattemptid = $this->get_new_parentid('question_attempt');
+        $data->timecreated = $this->apply_date_offset($data->timecreated);
+        $data->userid      = $this->get_mappingid('user', $data->userid);
+
+        // Everything ready, insert and create mapping (needed by question_sessions)
+        $newitemid = $DB->insert_record('question_attempt_steps', $data);
+        $this->set_mapping('question_attempt_step', $oldid, $newitemid, true);
+
+        // Now process the response data.
+        $response = $this->questions_recode_response_data(
+                $this->qtypes[$data->questionattemptid],
+                $this->newquestionids[$data->questionattemptid],
+                $data->sequencenumber, $response);
+        foreach ($response as $name => $value) {
+            $row = new stdClass();
+            $row->attemptstepid = $newitemid;
+            $row->name = $name;
+            $row->value = $value;
+            $DB->insert_record('question_attempt_step_data', $row, false);
+        }
+    }
+
+    /**
+     * Recode the respones data for a particular step of an attempt at at particular question.
+     * @param string $qtype the question type.
+     * @param int $newquestionid the question id.
+     * @param int $sequencenumber the sequence number.
+     * @param array $response the response data to recode.
+     */
+    public function questions_recode_response_data(
+            $qtype, $newquestionid, $sequencenumber, array $response) {
+        $qtyperestorer = $this->get_qtype_restorer($qtype);
+        if ($qtyperestorer) {
+            $response = $qtyperestorer->recode_response($newquestionid, $sequencenumber, $response);
+        }
+        return $response;
     }
 
     /**
@@ -2581,25 +2697,191 @@ abstract class restore_questions_activity_structure_step extends restore_activit
     }
 
     /**
-     * Given one question_states record, return the answer
-     * recoded pointing to all the restored stuff
+     * Get the restore_qtype_plugin subclass for a specific question type.
+     * @param string $qtype e.g. multichoice.
+     * @return restore_qtype_plugin instance.
      */
-    public function restore_recode_answer($state, $qtype) {
+    protected function get_qtype_restorer($qtype) {
         // Build one static cache to store {@link restore_qtype_plugin}
         // while we are needing them, just to save zillions of instantiations
         // or using static stuff that will break our nice API
         static $qtypeplugins = array();
 
-        // If we haven't the corresponding restore_qtype_plugin for current qtype
-        // instantiate it and add to cache
         if (!isset($qtypeplugins[$qtype])) {
             $classname = 'restore_qtype_' . $qtype . '_plugin';
             if (class_exists($classname)) {
                 $qtypeplugins[$qtype] = new $classname('qtype', $qtype, $this);
             } else {
-                $qtypeplugins[$qtype] = false;
+                $qtypeplugins[$qtype] = null;
             }
         }
-        return !empty($qtypeplugins[$qtype]) ? $qtypeplugins[$qtype]->recode_state_answer($state) : $state->answer;
+        return $qtypeplugins[$qtype];
+    }
+
+    protected function after_execute() {
+        parent::after_execute();
+
+        // Restore any files belonging to responses.
+        foreach (question_engine::get_all_response_file_areas() as $filearea) {
+            $this->add_related_files('question', $filearea, 'question_attempt_step');
+        }
+    }
+
+    /**
+     * Attach below $element (usually attempts) the needed restore_path_elements
+     * to restore question attempt data from Moodle 2.0.
+     *
+     * When using this method, the parent element ($element) must be defined with
+     * $grouped = true. Then, in that elements process method, you must call
+     * {@link process_legacy_attempt_data()} with the groupded data. See, for
+     * example, the usage of this method in {@link restore_quiz_activity_structure_step}.
+     * @param restore_path_element $element the parent element. (E.g. a quiz attempt.)
+     * @param array $paths the paths array that is being built to describe the
+     *      structure.
+     */
+    protected function add_legacy_question_attempt_data($element, &$paths) {
+        global $CFG;
+        require_once($CFG->dirroot . '/question/engine/upgrade/upgradelib.php');
+
+        // Check $element is restore_path_element
+        if (!($element instanceof restore_path_element)) {
+            throw new restore_step_exception('element_must_be_restore_path_element', $element);
+        }
+        // Check $paths is one array
+        if (!is_array($paths)) {
+            throw new restore_step_exception('paths_must_be_array', $paths);
+        }
+
+        $paths[] = new restore_path_element('question_state',
+                $element->get_path() . '/states/state');
+        $paths[] = new restore_path_element('question_session',
+                $element->get_path() . '/sessions/session');
+    }
+
+    protected function get_attempt_upgrader() {
+        if (empty($this->attemptupgrader)) {
+            $this->attemptupgrader = new question_engine_attempt_upgrader();
+            $this->attemptupgrader->prepare_to_restore();
+        }
+        return $this->attemptupgrader;
+    }
+
+    /**
+     * Process the attempt data defined by {@link add_legacy_question_attempt_data()}.
+     * @param object $data contains all the grouped attempt data ot process.
+     * @param pbject $quiz data about the activity the attempts belong to. Required
+     * fields are (basically this only works for the quiz module):
+     *      oldquestions => list of question ids in this activity - using old ids.
+     *      preferredbehaviour => the behaviour to use for questionattempts.
+     */
+    protected function process_legacy_quiz_attempt_data($data, $quiz) {
+        global $DB;
+        $upgrader = $this->get_attempt_upgrader();
+
+        $data = (object)$data;
+
+        $layout = explode(',', $data->layout);
+        $newlayout = $layout;
+
+        // Convert each old question_session into a question_attempt.
+        $qas = array();
+        foreach (explode(',', $quiz->oldquestions) as $questionid) {
+            if ($questionid == 0) {
+                continue;
+            }
+
+            $newquestionid = $this->get_mappingid('question', $questionid);
+            if (!$newquestionid) {
+                throw new restore_step_exception('questionattemptreferstomissingquestion',
+                        $questionid, $questionid);
+            }
+
+            $question = $upgrader->load_question($newquestionid, $quiz->id);
+
+            foreach ($layout as $key => $qid) {
+                if ($qid == $questionid) {
+                    $newlayout[$key] = $newquestionid;
+                }
+            }
+
+            list($qsession, $qstates) = $this->find_question_session_and_states(
+                    $data, $questionid);
+
+            if (empty($qsession) || empty($qstates)) {
+                throw new restore_step_exception('questionattemptdatamissing',
+                        $questionid, $questionid);
+            }
+
+            list($qsession, $qstates) = $this->recode_legacy_response_data(
+                    $question, $qsession, $qstates);
+
+            $data->layout = implode(',', $newlayout);
+            $qas[$newquestionid] = $upgrader->convert_question_attempt(
+                    $quiz, $data, $question, $qsession, $qstates);
+        }
+
+        // Now create a new question_usage.
+        $usage = new stdClass();
+        $usage->component = 'mod_quiz';
+        $usage->contextid = $this->get_mappingid('context', $this->task->get_old_contextid());
+        $usage->preferredbehaviour = $quiz->preferredbehaviour;
+        $usage->id = $DB->insert_record('question_usages', $usage);
+
+        $DB->set_field('quiz_attempts', 'uniqueid', $usage->id,
+                array('id' => $this->get_mappingid('quiz_attempt', $data->id)));
+
+        $data->uniqueid = $usage->id;
+        $upgrader->save_usage($quiz->preferredbehaviour, $data, $qas, $quiz->questions);
+    }
+
+    protected function find_question_session_and_states($data, $questionid) {
+        $qsession = null;
+        foreach ($data->sessions['session'] as $session) {
+            if ($session['questionid'] == $questionid) {
+                $qsession = (object) $session;
+                break;
+            }
+        }
+
+        $qstates = array();
+        foreach ($data->states['state'] as $state) {
+            if ($state['question'] == $questionid) {
+                $qstates[$state['seq_number']] = (object) $state;
+            }
+        }
+        ksort($qstates);
+
+        return array($qsession, $qstates);
+    }
+
+    /**
+     * Recode any ids in the response data
+     * @param object $question the question data
+     * @param object $qsession the question sessions.
+     * @param array $qstates the question states.
+     */
+    protected function recode_legacy_response_data($question, $qsession, $qstates) {
+        $qsession->questionid = $question->id;
+
+        foreach ($qstates as &$state) {
+            $state->question = $question->id;
+            $state->answer = $this->restore_recode_legacy_answer($state, $question->qtype);
+        }
+
+        return array($qsession, $qstates);
+    }
+
+    /**
+     * Recode the legacy answer field.
+     * @param object $state the state to recode the answer of.
+     * @param string $qtype the question type.
+     */
+    public function restore_recode_legacy_answer($state, $qtype) {
+        $restorer = $this->get_qtype_restorer($qtype);
+        if ($restorer) {
+            return $restorer->recode_legacy_state_answer($state);
+        } else {
+            return $state->answer;
+        }
     }
 }

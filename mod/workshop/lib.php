@@ -102,8 +102,9 @@ function workshop_add_instance(stdclass $workshop) {
     // re-save the record with the replaced URLs in editor fields
     $DB->update_record('workshop', $workshop);
 
-    // update gradebook item
+    // create gradebook items
     workshop_grade_item_update($workshop);
+    workshop_grade_item_category_update($workshop);
 
     return $workshop->id;
 }
@@ -150,8 +151,9 @@ function workshop_update_instance(stdclass $workshop) {
     // re-save the record with the replaced URLs in editor fields
     $DB->update_record('workshop', $workshop);
 
-    // update gradebook item
+    // update gradebook items
     workshop_grade_item_update($workshop);
+    workshop_grade_item_category_update($workshop);
 
     return true;
 }
@@ -1100,6 +1102,37 @@ function workshop_update_grades(stdclass $workshop, $userid=0) {
     workshop_grade_item_update($workshop, $submissiongrades, $assessmentgrades);
 }
 
+/**
+ * Update the grade items categories if they are changed via mod_form.php
+ *
+ * We must do it manually here in the workshop module because modedit supports only
+ * single grade item while we use two.
+ *
+ * @param stdClass $workshop An object from the form in mod_form.php
+ */
+function workshop_grade_item_category_update($workshop) {
+
+    $gradeitems = grade_item::fetch_all(array(
+        'itemtype'      => 'mod',
+        'itemmodule'    => 'workshop',
+        'iteminstance'  => $workshop->id,
+        'courseid'      => $workshop->course));
+
+    if (!empty($gradeitems)) {
+        foreach ($gradeitems as $gradeitem) {
+            if ($gradeitem->itemnumber == 0) {
+                if ($gradeitem->categoryid != $workshop->gradecategory) {
+                    $gradeitem->set_parent($workshop->gradecategory);
+                }
+            } else if ($gradeitem->itemnumber == 1) {
+                if ($gradeitem->categoryid != $workshop->gradinggradecategory) {
+                    $gradeitem->set_parent($workshop->gradinggradecategory);
+                }
+            }
+        }
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // File API                                                                   //
 ////////////////////////////////////////////////////////////////////////////////
@@ -1341,4 +1374,15 @@ function workshop_extend_settings_navigation(settings_navigation $settingsnav, n
         $url = new moodle_url('/mod/workshop/allocation.php', array('cmid' => $PAGE->cm->id));
         $workshopnode->add(get_string('allocate', 'workshop'), $url, settings_navigation::TYPE_SETTING);
     }
+}
+
+/**
+ * Return a list of page types
+ * @param string $pagetype current page type
+ * @param stdClass $parentcontext Block's parent context
+ * @param stdClass $currentcontext Current context of block
+ */
+function workshop_pagetypelist($pagetype, $parentcontext, $currentcontext) {
+    $module_pagetype = array('mod-workshop-*'=>get_string('page-mod-workshop-x', 'workshop'));
+    return $module_pagetype;
 }

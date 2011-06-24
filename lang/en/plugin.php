@@ -18,7 +18,7 @@
  * Defines names of plugin types and some strings used at the plugin managment
  *
  * @package    core
- * @subpackage admin
+ * @subpackage plugin
  * @copyright  2011 David Mudrak <david@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -86,6 +86,8 @@ $string['type_portfolio'] = 'Portfolio';
 $string['type_portfolio_plural'] = 'Portfolios';
 $string['type_profilefield'] = 'Profile field type';
 $string['type_profilefield_plural'] = 'Profile field types';
+$string['type_qbehaviour'] = 'Question behaviour';
+$string['type_qbehaviour_plural'] = 'Question behaviours';
 $string['type_qformat'] = 'Question import/export format';
 $string['type_qformat_plural'] = 'Question import/export formats';
 $string['type_qtype'] = 'Question type';

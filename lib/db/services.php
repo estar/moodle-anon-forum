@@ -126,7 +126,16 @@ $functions = array(
         'classpath'   => 'user/externallib.php',
         'description' => 'Get users by id.',
         'type'        => 'read',
-        'capabilities'=> 'moodle/user:viewalldetails',
+        'capabilities'=> 'moodle/user:viewdetails, moodle/user:viewhiddendetails, moodle/course:useremail, moodle/user:update',
+    ),
+
+    'moodle_user_get_course_participants_by_id' => array(
+        'classname'   => 'moodle_user_external',
+        'methodname'  => 'get_course_participants_by_id',
+        'classpath'   => 'user/externallib.php',
+        'description' => 'Get course user profiles by id.',
+        'type'        => 'read',
+        'capabilities'=> 'moodle/user:viewdetails, moodle/user:viewhiddendetails, moodle/course:useremail, moodle/user:update, moodle/site:accessallgroups',
     ),
 
     'moodle_user_delete_users' => array(
@@ -206,4 +215,52 @@ $functions = array(
         'capabilities'=> 'moodle/course:create,moodle/course:visibility',
     ),
 
+    // === message related functions ===
+
+    'moodle_message_send_messages' => array(
+        'classname'   => 'moodle_message_external',
+        'methodname'  => 'send_messages',
+        'classpath'   => 'message/externallib.php',
+        'description' => 'Send messages',
+        'type'        => 'write',
+        'capabilities'=> 'moodle/site:sendmessage',
+    ),
+
+    // === notes related functions ===
+
+    'moodle_notes_create_notes' => array(
+        'classname'   => 'moodle_notes_external',
+        'methodname'  => 'create_notes',
+        'classpath'   => 'notes/externallib.php',
+        'description' => 'Create notes',
+        'type'        => 'write',
+        'capabilities'=> 'moodle/notes:manage',
+    ),
+
+    // === webservice related functions ===
+
+    'moodle_webservice_get_siteinfo' => array(
+        'classname'   => 'moodle_webservice_external',
+        'methodname'  => 'get_siteinfo',
+        'classpath'   => 'webservice/externallib.php',
+        'description' => 'Return some site info / user info / list web service functions',
+        'type'        => 'read',
+    ),
+
+);
+
+$services = array(
+   'Moodle mobile web service'  => array(
+        'functions' => array (
+            'moodle_enrol_get_users_courses',
+            'moodle_enrol_get_enrolled_users',
+            'moodle_user_get_users_by_id',
+            'moodle_webservice_get_siteinfo',
+            'moodle_notes_create_notes',
+            'moodle_user_get_course_participants_by_id',
+            'moodle_message_send_messages'),
+        'enabled' => 0,
+        'restrictedusers' => 0,
+        'shortname' => MOODLE_OFFICIAL_MOBILE_SERVICE
+    ),
 );
