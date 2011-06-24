@@ -151,5 +151,28 @@
         <INDEX NAME="userid-forumid" UNIQUE="false" FIELDS="userid, forumid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="forumanon_statement" COMMENT="For keeping users confirmation for forumanon-statement" PREVIOUS="forumanon_track_prefs" NEXT="forumanon_assignment">
+      <FIELDS>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="userid"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="forumanon_assignment" COMMENT="For keeping user/post assignment" PREVIOUS="forumanon_statement">
+      <FIELDS>
+      	<FIELD NAME="postid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" NEXT="userid"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="postid"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="postid"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid" UNIQUE="false" FIELDS="postid, userid"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>
