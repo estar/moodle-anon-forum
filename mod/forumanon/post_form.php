@@ -120,7 +120,14 @@ class mod_forumanon_post_form extends moodleform {
             }
             $mform->addElement('static', 'groupinfo', get_string('group'), $groupname);
         }
-
+        
+        //-------------------------------------------------------------------------------
+        //  forumanon checkbox
+        $forumanonon = TRUE;
+        if ($forumanonon) {
+            $mform->addElement('checkbox', 'anonymize', get_string('anonymize', 'forumanon'));
+            $mform->addHelpButton('anonymize', 'anonymize', 'forumanon');
+        }
         //-------------------------------------------------------------------------------
         // buttons
         if (isset($post->edit)) { // hack alert
