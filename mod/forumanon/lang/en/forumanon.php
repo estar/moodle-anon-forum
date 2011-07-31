@@ -34,8 +34,13 @@ $string['allowsdiscussions'] = 'This forum allows each person to start one discu
 $string['allsubscribe'] = 'Subscribe to all forums';
 $string['allunsubscribe'] = 'Unsubscribe from all forums';
 $string['alreadyfirstpost'] = 'This is already the first post in the discussion';
+
 $string['anonymize'] = 'Anonymize';
 $string['anonymize_help'] = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.';
+$string['anonconditiontitle'] = 'Conditions';
+$string['anonconditiontext'] = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.';
+$string['anonconfirm'] = 'Confirm';
+
 $string['anyfile'] = 'Any file';
 $string['attachment'] = 'Attachment';
 $string['attachment_help'] = 'You can optionally attach one or more files to a forum post. If you attach an image, it will be displayed after the message.';

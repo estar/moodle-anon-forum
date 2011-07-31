@@ -125,8 +125,16 @@ class mod_forumanon_post_form extends moodleform {
         //  forumanon checkbox
         $forumanonon = TRUE;
         if ($forumanonon) {
-            $mform->addElement('checkbox', 'anonymize', get_string('anonymize', 'forumanon'));
+            $mform->addElement('advcheckbox', 'anonymize', get_string('anonymize', 'forumanon'), null, array('onchange' => "if(this.checked == true) document.getElementById('anon_con_box').style.display = 'block'; else document.getElementById('anon_con_box').style.display = 'none'; "), array(0, 1));
             $mform->addHelpButton('anonymize', 'anonymize', 'forumanon');
+            $mform->addElement('html', '<div id="anon_con_box" style="display:none;">');
+            $mform->addElement('html', '<div class="fitem">');
+            $mform->addElement('html', '<div class="fitemtitle">'.get_string('anonconditiontitle', 'forumanon').'</div>');
+            $mform->addElement('html', '<div class="felement">'.get_string('anonconditiontext', 'forumanon').'</div>');
+            $mform->addElement('html', '</div>');
+            $mform->addElement('checkbox', 'anon_confirm', get_string('anonconfirm', 'forumanon'));
+            //$mform->addRule('anon_confirm', get_string('required'), 'required', null, 'client');
+            $mform->addElement('html', '</div>');
         }
         //-------------------------------------------------------------------------------
         // buttons
