@@ -35,6 +35,8 @@ $prune   = optional_param('prune', 0, PARAM_INT);
 $name    = optional_param('name', '', PARAM_CLEAN);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 $groupid = optional_param('groupid', null, PARAM_INT);
+$anonymize = optional_param('anonymize', 0, PARAM_INT); // ##################################################
+$anon_confirm = optional_param('anon_confirm', 0, PARAM_INT); // ##################################################
 
 $PAGE->set_url('/mod/forumanon/post.php', array(
         'reply' => $reply,
@@ -45,6 +47,8 @@ $PAGE->set_url('/mod/forumanon/post.php', array(
         'name'  => $name,
         'confirm'=>$confirm,
         'groupid'=>$groupid,
+		'anonymize'=>$anonymize,
+		'anon_confirm'=>$anon_confirm,
         ));
 //these page_params will be passed as hidden variables later in the form.
 $page_params = array('reply'=>$reply, 'forum'=>$forum, 'edit'=>$edit);
@@ -132,7 +136,6 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
         $SESSION->fromurl = '';
     }
 
-
     // Load up the $post variable.
 
     $post = new stdClass();
@@ -141,10 +144,12 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     $post->discussion    = 0;           // ie discussion # not defined yet
     $post->parent        = 0;
     $post->subject       = '';
-    $post->userid        = $USER->id;
+    $post->userid        = $anonymize ? $anonuser_id : $USER->id;  // lib.php line 47 #####################################################################################################
     $post->message       = '';
     $post->messageformat = editors_get_preferred_format();
     $post->messagetrust  = 0;
+    $post->anonymize	 = $anonymize;
+    $post->anon_confirm  = $anon_confirm;
 
     if (isset($groupid)) {
         $post->groupid = $groupid;
@@ -217,8 +222,10 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     $post->discussion  = $parent->discussion;
     $post->parent      = $parent->id;
     $post->subject     = $parent->subject;
-    $post->userid      = $USER->id;
+    $post->userid        = $anonymize ? $anonuser_id : $USER->id;  // lib.php line 47 #####################################################################################################
     $post->message     = '';
+    $post->anonymize	 = $anonymize;
+    $post->anon_confirm  = $anon_confirm;
 
     $post->groupid = ($discussion->groupid == -1) ? 0 : $discussion->groupid;
 
@@ -301,7 +308,8 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     require_login($course, false, $cm);
     $modcontext = get_context_instance(CONTEXT_MODULE, $cm->id);
 
-    if ( !(($post->userid == $USER->id && has_capability('mod/forumanon:deleteownpost', $modcontext))
+    // if ( !(($post->userid == $USER->id && has_capability('mod/forumanon:deleteownpost', $modcontext))
+    if ( !(($post->userid == $anonuser_id && has_capability('mod/forumanon:deleteownpost', $modcontext)) // lib.php line 47 #####################################################################################################
                 || has_capability('mod/forumanon:deleteanypost', $modcontext)) ) {
         print_error('cannotdeletepost', 'forumanon');
     }
@@ -429,10 +437,12 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
         $newdiscussion->forum        = $discussion->forum;
         $newdiscussion->name         = $name;
         $newdiscussion->firstpost    = $post->id;
-        $newdiscussion->userid       = $discussion->userid;
+        //$newdiscussion->userid       = $discussion->userid;
+        $newdiscussion->userid 		 = $anonuser_id;  // lib.php line 47 #####################################################################################################
         $newdiscussion->groupid      = $discussion->groupid;
         $newdiscussion->assessed     = $discussion->assessed;
-        $newdiscussion->usermodified = $post->userid;
+        //$newdiscussion->usermodified = $post->userid;
+        $newdiscussion->usermodified = $anonuser_id;  // lib.php line 47 #####################################################################################################
         $newdiscussion->timestart    = $discussion->timestart;
         $newdiscussion->timeend      = $discussion->timeend;
 
@@ -510,9 +520,10 @@ $mform_post = new mod_forumanon_post_form('post.php', array('course'=>$course, '
 $draftitemid = file_get_submitted_draft_itemid('attachments');
 file_prepare_draft_area($draftitemid, $modcontext->id, 'mod_forumanon', 'attachment', empty($post->id)?null:$post->id);
 
-//load data into form NOW!
+//load data into form NOW!     evho'<pre>'print_r($post)
 
-if ($USER->id != $post->userid) {   // Not the original author, so add a message to the end
+// ###############################################
+if (!anonymize && $USER->id != $post->userid) {   // Not the original author, so add a message to the end
     $data->date = userdate($post->modified);
     if ($post->messageformat == FORMAT_HTML) {
         $data->name = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$USER->id.'&course='.$post->course.'">'.
@@ -547,6 +558,7 @@ if (forumanon_is_subscribed($USER->id, $forum->id)) {
 
 $draftid_editor = file_get_submitted_draft_itemid('message');
 $currenttext = file_prepare_draft_area($draftid_editor, $modcontext->id, 'mod_forumanon', 'post', empty($post->id) ? null : $post->id, array('subdirs'=>true), $post->message);
+
 $mform_post->set_data(array(        'attachments'=>$draftitemid,
                                     'general'=>$heading,
                                     'subject'=>$post->subject,
@@ -584,19 +596,20 @@ $mform_post->set_data(array(        'attachments'=>$draftitemid,
                                     array()));
 
 if ($fromform = $mform_post->get_data()) {
-
-    if (empty($SESSION->fromurl)) {
+	if (empty($SESSION->fromurl)) {
         $errordestination = "$CFG->wwwroot/mod/forumanon/view.php?f=$forum->id";
     } else {
         $errordestination = $SESSION->fromurl;
     }
-
+    
     $fromform->itemid        = $fromform->message['itemid'];
     $fromform->messageformat = $fromform->message['format'];
     $fromform->message       = $fromform->message['text'];
     // WARNING: the $fromform->message array has been overwritten, do not use it anymore!
     $fromform->messagetrust  = trusttext_trusted($modcontext);
-
+    
+	$fromform->userid = $anonymize ? $anonuser_id : $fromform->userid; // ##################################
+    
     if ($fromform->edit) {           // Updating a post
         unset($fromform->groupid);
         $fromform->id = $fromform->edit;
@@ -727,8 +740,7 @@ if ($fromform = $mform_post->get_data()) {
         $discussion->timeend = $fromform->timeend;
 
         $message = '';
-        if ($discussion->id = forumanon_add_discussion($discussion, $mform_post, $message)) {
-
+        if ($discussion->id = forumanon_add_discussion($discussion, $mform_post, $message, $fromform->userid)) {
             add_to_log($course->id, "forumanon", "add discussion",
                     "discuss.php?d=$discussion->id", "$discussion->id", $cm->id);
 

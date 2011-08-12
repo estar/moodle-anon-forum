@@ -31,7 +31,7 @@ class mod_forumanon_post_form extends moodleform {
 
     function definition() {
 
-        global $CFG;
+        global $CFG, $DB;
         $mform    =& $this->_form;
 
         $course        = $this->_customdata['course'];
@@ -40,6 +40,7 @@ class mod_forumanon_post_form extends moodleform {
         $modcontext    = $this->_customdata['modcontext'];
         $forum         = $this->_customdata['forum'];
         $post          = $this->_customdata['post'];
+
         // if $forum->maxbytes == '0' means we should use $course->maxbytes
         if ($forum->maxbytes == '0') {
             $forum->maxbytes = $course->maxbytes;
@@ -127,13 +128,14 @@ class mod_forumanon_post_form extends moodleform {
         if ($forumanonon) {
             $mform->addElement('advcheckbox', 'anonymize', get_string('anonymize', 'forumanon'), null, array('onchange' => "if(this.checked == true) document.getElementById('anon_con_box').style.display = 'block'; else document.getElementById('anon_con_box').style.display = 'none'; "), array(0, 1));
             $mform->addHelpButton('anonymize', 'anonymize', 'forumanon');
-            $mform->addElement('html', '<div id="anon_con_box" style="display:none;">');
+			$anon_display = $this->_customdata['post']->anonymize ? 'block' : 'none';
+            $mform->addElement('html', '<div id="anon_con_box" style="display:'.$anon_display.';">');
             $mform->addElement('html', '<div class="fitem">');
             $mform->addElement('html', '<div class="fitemtitle">'.get_string('anonconditiontitle', 'forumanon').'</div>');
             $mform->addElement('html', '<div class="felement">'.get_string('anonconditiontext', 'forumanon').'</div>');
             $mform->addElement('html', '</div>');
-            $mform->addElement('checkbox', 'anon_confirm', get_string('anonconfirm', 'forumanon'));
-            //$mform->addRule('anon_confirm', get_string('required'), 'required', null, 'client');
+            //$mform->addElement('checkbox', 'anon_confirm', get_string('anonconfirm', 'forumanon'));
+            $mform->addElement('advcheckbox', 'anon_confirm', get_string('anonconfirm', 'forumanon'), null, null, array(0, 1));
             $mform->addElement('html', '</div>');
         }
         //-------------------------------------------------------------------------------
@@ -180,6 +182,9 @@ class mod_forumanon_post_form extends moodleform {
         }
         if (empty($data['subject'])) {
             $errors['subject'] = get_string('erroremptysubject', 'forumanon');
+        }
+        if (($data['anonymize']==1) && ($data['anon_confirm']==0)) {
+        	$errors['anon_confirm'] = 'Es wurde nicht den Bedingungen zum Anonymisieren zugestimmt!';
         }
         return $errors;
     }

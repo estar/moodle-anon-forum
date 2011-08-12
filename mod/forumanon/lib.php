@@ -42,6 +42,10 @@ define('FORUMANON_TRACKING_OFF', 0);
 define('FORUMANON_TRACKING_OPTIONAL', 1);
 define('FORUMANON_TRACKING_ON', 2);
 
+/// FORUMANON ///////////////////////////////////////////////////////////
+
+$anonuser_id = 3;
+
 /// STANDARD FUNCTIONS ///////////////////////////////////////////////////////////
 
 /**
@@ -415,6 +419,7 @@ function forumanon_cron() {
         }
 
         // checking post validity, and adding users to loop through later
+        
         foreach ($posts as $pid => $post) {
 
             $discussionid = $post->discussion;
@@ -4112,7 +4117,7 @@ function forumanon_add_attachment($post, $forum, $cm, $mform=null, &$message=nul
  */
 function forumanon_add_new_post($post, $mform, &$message) {
     global $USER, $CFG, $DB;
-
+    
     $discussion = $DB->get_record('forumanon_discussions', array('id' => $post->discussion));
     $forum      = $DB->get_record('forumanon', array('id' => $discussion->forum));
     $cm         = get_coursemodule_from_instance('forumanon', $forum->id);
@@ -4120,7 +4125,7 @@ function forumanon_add_new_post($post, $mform, &$message) {
 
     $post->created    = $post->modified = time();
     $post->mailed     = "0";
-    $post->userid     = $USER->id;
+    $post->userid     = isset($post->userid) ? $post->userid : $USER->id; // ############################################
     $post->attachment = "";
 
     $post->id = $DB->insert_record("forumanon_posts", $post);
