@@ -173,6 +173,7 @@ class mod_forumanon_post_form extends moodleform {
     }
 
     function validation($data, $files) {
+		global $DB, $USER;
         $errors = parent::validation($data, $files);
         if (($data['timeend']!=0) && ($data['timestart']!=0) && $data['timeend'] <= $data['timestart']) {
             $errors['timeend'] = get_string('timestartenderror', 'forumanon');
@@ -184,8 +185,14 @@ class mod_forumanon_post_form extends moodleform {
             $errors['subject'] = get_string('erroremptysubject', 'forumanon');
         }
         if (($data['anonymize']==1) && ($data['anon_confirm']==0)) {
-        	$errors['anon_confirm'] = 'Es wurde nicht den Bedingungen zum Anonymisieren zugestimmt!';
-        }
+        	$errors['anon_confirm'] = get_string('erroremptyanonconfirm', 'forumanon');
+        } else {
+			if (0 == $DB->count_records('forumanon_statement',array('userid'=>$USER->id))) {
+				$statement = new stdClass();
+				$statement->userid = $USER->id;
+				$DB->insert_record('forumanon_statement',$statement, FALSE);
+			}
+		}
         return $errors;
     }
 }

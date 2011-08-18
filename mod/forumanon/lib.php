@@ -4116,7 +4116,7 @@ function forumanon_add_attachment($post, $forum, $cm, $mform=null, &$message=nul
  * @return int
  */
 function forumanon_add_new_post($post, $mform, &$message) {
-    global $USER, $CFG, $DB;
+    global $USER, $CFG, $DB, $anonuser_id;
     
     $discussion = $DB->get_record('forumanon_discussions', array('id' => $post->discussion));
     $forum      = $DB->get_record('forumanon', array('id' => $discussion->forum));
@@ -4140,6 +4140,16 @@ function forumanon_add_new_post($post, $mform, &$message) {
     if (forumanon_tp_can_track_forums($forum) && forumanon_tp_is_tracked($forum)) {
         forumanon_tp_mark_post_read($post->userid, $post, $post->forum);
     }
+    
+    // Update forumanon_assignment & forumanon_statement ##############################################################
+    if ($anonuser_id == $post->userid) {
+    	// forumanon_assignment
+    	$assignment = new stdClass();
+		$assignment->postid = $post->id;
+		$assignment->userid = $USER->id;
+		$DB->insert_record('forumanon_assignment',$assignment, FALSE); //ToDo: insert 'id' column in db-tabele?
+    }
+    // #################################################################################################################
 
     return $post->id;
 }
@@ -4203,7 +4213,7 @@ function forumanon_update_post($post, $mform, &$message) {
  * @return object
  */
 function forumanon_add_discussion($discussion, $mform=null, &$message=null, $userid=null) {
-    global $USER, $CFG, $DB;
+    global $USER, $CFG, $DB, $anonuser_id;
 
     $timenow = time();
 
@@ -4234,6 +4244,15 @@ function forumanon_add_discussion($discussion, $mform=null, &$message=null, $use
     $post->mailnow       = $discussion->mailnow;
 
     $post->id = $DB->insert_record("forumanon_posts", $post);
+    
+        // Update forumanon_assignment #####################################################################################
+    if ($anonuser_id == $userid) {
+    	$assignment = new stdClass();
+		$assignment->postid = $post->id;
+		$assignment->userid = $USER->id;
+		$DB->insert_record('forumanon_assignment',$assignment, FALSE); //ToDo: insert 'id' column in db-tabele?
+    }
+    // #################################################################################################################
 
     // TODO: Fix the calling code so that there always is a $cm when this function is called
     if (!empty($cm->id) && !empty($discussion->itemid)) {   // In "single simple discussions" this may not exist yet

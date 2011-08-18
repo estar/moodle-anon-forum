@@ -35,11 +35,11 @@ $string['allsubscribe'] = 'Subscribe to all forums';
 $string['allunsubscribe'] = 'Unsubscribe from all forums';
 $string['alreadyfirstpost'] = 'This is already the first post in the discussion';
 
-$string['anonymize'] = 'Anonymize';
-$string['anonymize_help'] = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.';
-$string['anonconditiontitle'] = 'Conditions';
-$string['anonconditiontext'] = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.';
-$string['anonconfirm'] = 'Confirm';
+$string['anonymize'] = 'Anonym';
+$string['anonymize_help'] = 'Die Aktivierung der Anonymfunktion erm&#246;glicht es dem Nutzer seine Identit&#228;t gegen&#252;ber anderen Nutzern zu verbergen.';
+$string['anonconditiontitle'] = 'Bedingungen ';
+$string['anonconditiontext'] = 'Um m&#246;glichen Missbrauch zu vermeiden, kann der Betreiber (jedoch nicht der Dozent oder andere Nutzer) zu jedem anonym verfassten Beitrag die wahre Identit&#228;t des Verfassers feststellen.';
+$string['anonconfirm'] = 'Ich habe die Bedingungen gelesen';
 
 $string['anyfile'] = 'Any file';
 $string['attachment'] = 'Attachment';
@@ -139,6 +139,9 @@ $string['edit'] = 'Edit';
 $string['editedby'] = 'Edited by {$a->name} - original submission {$a->date}';
 $string['editing'] = 'Editing';
 $string['emptymessage'] = 'Something was wrong with your post. Perhaps you left it blank, or the attachment was too big. Your changes have NOT been saved.';
+
+$string['erroremptyanonconfirm'] = 'Es wurde nicht den Bedingungen zum Anonymisieren zugestimmt.';
+
 $string['erroremptymessage'] = 'Post message cannot be empty';
 $string['erroremptysubject'] = 'Post subject cannot be empty.';
 $string['errorwhiledelete'] = 'An error occurred while deleting record.';
