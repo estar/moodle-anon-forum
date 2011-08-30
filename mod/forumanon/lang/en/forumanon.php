@@ -38,7 +38,7 @@ $string['alreadyfirstpost'] = 'This is already the first post in the discussion'
 $string['anonymize'] = 'Anonym';
 $string['anonymize_help'] = 'Die Aktivierung der Anonymfunktion erm&#246;glicht es dem Nutzer seine Identit&#228;t gegen&#252;ber anderen Nutzern zu verbergen.';
 $string['anonconditiontitle'] = 'Bedingungen ';
-$string['anonconditiontext'] = 'Um m&#246;glichen Missbrauch zu vermeiden, kann der Betreiber (jedoch nicht der Dozent oder andere Nutzer) zu jedem anonym verfassten Beitrag die wahre Identit&#228;t des Verfassers feststellen.';
+$string['anonconditiontext'] = 'Die Nutzung des Forums in Verbindung mit der Anonymfunktion verpflichtet keinerlei Material zu publizieren, das in anst&#246;&#223;iger Sprache verfasst ist oder in irgendeiner Form profan, pornographisch, sexuell anst&#246;&#223;ig oder verleumderisch ist oder &#252;ble Nachrede enth&#228;lt, gegen geltendes Recht verst&#246;&#223;t oder die rechte Dritter verletzt. Um m&#246;glichen Missbrauch zu vermeiden, kann der Betreiber (jedoch nicht der Dozent oder andere Nutzer) zu jedem anonym verfassten Beitrag die wahre Identit&#228;t des Verfassers feststellen.';
 $string['anonconfirm'] = 'Ich habe die Bedingungen gelesen';
 
 $string['anyfile'] = 'Any file';
