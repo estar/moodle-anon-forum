@@ -42,10 +42,6 @@ define('FORUMANON_TRACKING_OFF', 0);
 define('FORUMANON_TRACKING_OPTIONAL', 1);
 define('FORUMANON_TRACKING_ON', 2);
 
-/// FORUMANON ///////////////////////////////////////////////////////////
-
-$anonuser_id = 3;
-
 /// STANDARD FUNCTIONS ///////////////////////////////////////////////////////////
 
 /**
@@ -4116,7 +4112,7 @@ function forumanon_add_attachment($post, $forum, $cm, $mform=null, &$message=nul
  * @return int
  */
 function forumanon_add_new_post($post, $mform, &$message) {
-    global $USER, $CFG, $DB, $anonuser_id;
+    global $USER, $CFG, $DB;
     
     $discussion = $DB->get_record('forumanon_discussions', array('id' => $post->discussion));
     $forum      = $DB->get_record('forumanon', array('id' => $discussion->forum));
@@ -4142,7 +4138,7 @@ function forumanon_add_new_post($post, $mform, &$message) {
     }
     
     // Update forumanon_assignment & forumanon_statement ##############################################################
-    if ($anonuser_id == $post->userid) {
+    if (get_config('forumanon', 'anonid') == $post->userid) {
     	// forumanon_assignment
     	$assignment = new stdClass();
 		$assignment->postid = $post->id;
@@ -4213,7 +4209,7 @@ function forumanon_update_post($post, $mform, &$message) {
  * @return object
  */
 function forumanon_add_discussion($discussion, $mform=null, &$message=null, $userid=null) {
-    global $USER, $CFG, $DB, $anonuser_id;
+    global $USER, $CFG, $DB;
 
     $timenow = time();
 
@@ -4246,7 +4242,7 @@ function forumanon_add_discussion($discussion, $mform=null, &$message=null, $use
     $post->id = $DB->insert_record("forumanon_posts", $post);
     
         // Update forumanon_assignment #####################################################################################
-    if ($anonuser_id == $userid) {
+    if (get_config('forumanon', 'anonid') == $userid) {
     	$assignment = new stdClass();
 		$assignment->postid = $post->id;
 		$assignment->userid = $USER->id;
