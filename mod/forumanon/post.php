@@ -518,7 +518,7 @@ $mform_post = new mod_forumanon_post_form('post.php', array('course'=>$course, '
 $draftitemid = file_get_submitted_draft_itemid('attachments');
 file_prepare_draft_area($draftitemid, $modcontext->id, 'mod_forumanon', 'attachment', empty($post->id)?null:$post->id);
 
-//load data into form NOW!     evho'<pre>'print_r($post)
+//load data into form NOW!
 
 // ###############################################
 if (!anonymize && $USER->id != $post->userid) {   // Not the original author, so add a message to the end
@@ -570,7 +570,8 @@ $mform_post->set_data(array(        'attachments'=>$draftitemid,
                                     'userid'=>$post->userid,
                                     'parent'=>$post->parent,
                                     'discussion'=>$post->discussion,
-                                    'course'=>$course->id) +
+                                    'course'=>$course->id,
+                                    'anon_confirm'=>$DB->count_records('forumanon_statement', array('userid'=>$USER->id))>0 ? 1 : 0) +
                                     $page_params +
 
                             (isset($post->format)?array(
