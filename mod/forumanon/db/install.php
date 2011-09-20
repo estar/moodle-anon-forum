@@ -15,7 +15,8 @@ function xmldb_forumanon_install() {
     $anon_pw = ''; // Just to make that clear.
     $anon_user = $DB->get_record('user', array('username'=>$anon_name));
     set_config('anonid', $anon_user->id, 'forumanon');
-    $anon_user->firstname = $anon_user->lastname = 'Anon'; // TODO: i18n?
+    $anon_user->firstname = '';
+    $anon_user->lastname = 'Anonymous'; // TODO: i18n?
     $anon_user->email = ''; // It might have been set.
     $DB->update_record('user', $anon_user);
 }
