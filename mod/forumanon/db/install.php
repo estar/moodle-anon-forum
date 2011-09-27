@@ -20,3 +20,7 @@ function xmldb_forumanon_install() {
     $anon_user->email = ''; // It might have been set.
     $DB->update_record('user', $anon_user);
 }
+
+function xmldb_forumanon_install_recovery() {
+	xmldb_forumanon_install();
+}
