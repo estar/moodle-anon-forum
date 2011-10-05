@@ -35,12 +35,11 @@ $string['allsubscribe'] = 'Subscribe to all forums';
 $string['allunsubscribe'] = 'Unsubscribe from all forums';
 $string['alreadyfirstpost'] = 'This is already the first post in the discussion';
 
-$string['anonymize'] = 'Anonym';
-$string['anonymize_help'] = 'Die Aktivierung der Anonymfunktion erm&#246;glicht es dem Nutzer seine Identit&#228;t gegen&#252;ber anderen Nutzern zu verbergen.';
-$string['anonconditiontitle'] = 'Bedingungen ';
-$string['anonconditiontext'] = 'Die Nutzung des Forums in Verbindung mit der Anonymfunktion verpflichtet keinerlei Material zu publizieren, das in anst&#246;&#223;iger Sprache verfasst ist oder in irgendeiner Form profan, pornographisch, sexuell anst&#246;&#223;ig oder verleumderisch ist oder &#252;ble Nachrede enth&#228;lt, gegen geltendes Recht verst&#246;&#223;t oder die rechte Dritter verletzt. Um m&#246;glichen Missbrauch zu vermeiden, kann der Betreiber (jedoch nicht der Dozent oder andere Nutzer) zu jedem anonym verfassten Beitrag die wahre Identit&#228;t des Verfassers feststellen.';
-$string['anonconfirm'] = 'Ich habe die Bedingungen gelesen';
-
+$string['anonymize'] = 'Anonymous';
+$string['anonymize_help'] = 'Posting anonymously conceals the author\'s identity from other users.';
+$string['anonconditiontitle'] = 'Conditions ';
+$string['anonconditiontext'] = 'By using this forum anonymously, you agree not to make posts in objectionable language or with profane, pornographic, sexually objectionable or defamatory content, or violating applicable law or infringing on the rights of others. To prevent potential abuse, the administrators (but not other users) may determine the identity of the author of an anonymous post.';
+$string['anonconfirm'] = 'I have read the conditions';
 $string['anyfile'] = 'Any file';
 $string['attachment'] = 'Attachment';
 $string['attachment_help'] = 'You can optionally attach one or more files to a forum post. If you attach an image, it will be displayed after the message.';
@@ -139,9 +138,7 @@ $string['edit'] = 'Edit';
 $string['editedby'] = 'Edited by {$a->name} - original submission {$a->date}';
 $string['editing'] = 'Editing';
 $string['emptymessage'] = 'Something was wrong with your post. Perhaps you left it blank, or the attachment was too big. Your changes have NOT been saved.';
-
-$string['erroremptyanonconfirm'] = 'Es wurde nicht den Bedingungen zum Anonymisieren zugestimmt.';
-
+$string['erroremptyanonconfirm'] = 'You have not agreed to the conditions for posting anonymously.';
 $string['erroremptymessage'] = 'Post message cannot be empty';
 $string['erroremptysubject'] = 'Post subject cannot be empty.';
 $string['errorwhiledelete'] = 'An error occurred while deleting record.';
@@ -235,7 +232,7 @@ $string['modenested'] = 'Display replies in nested form';
 $string['modethreaded'] = 'Display replies in threaded form';
 $string['modulename'] = 'Anonymizable Forum';
 $string['modulename_help'] = 'The forum module enables participants to have asynchronous discussions.';
-$string['modulename_link'] = 'forum';
+$string['modulename_link'] = 'forumanon';
 $string['modulenameplural'] = 'Forums';
 $string['more'] = 'more';
 $string['movedmarker'] = '(Moved)';
